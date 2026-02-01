@@ -1,458 +1,366 @@
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Genially Audio Player Builder</title>
-  <style>
-    :root{
-      --ui-text:#e8eefc;
-      --ui-muted:#a9b6d6;
-      --ui-border:rgba(255,255,255,.12);
-    }
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    body{margin:0;background:linear-gradient(120deg,#070a12,#0b1224 60%,#070a12);color:var(--ui-text)}
-    .wrap{max-width:1180px;margin:0 auto;padding:18px}
-    header{
-      display:flex;gap:12px;align-items:center;justify-content:space-between;
-      padding:14px;border:1px solid var(--ui-border);border-radius:16px;
-      background:rgba(16,24,42,.55);backdrop-filter: blur(10px);
-    }
-    header h1{margin:0;font-size:16px;font-weight:700}
-    header .sub{color:var(--ui-muted);font-size:12px;line-height:1.35}
-    .grid{display:grid;grid-template-columns:420px 1fr;gap:16px;margin-top:16px}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-    .panel{
-      border:1px solid var(--ui-border);border-radius:16px;background:rgba(16,24,42,.55);
-      backdrop-filter: blur(10px);overflow:hidden;
-    }
-    .panel .hd{
-      padding:12px 14px;border-bottom:1px solid var(--ui-border);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-    }
-    .panel .hd b{font-size:13px}
-    .panel .bd{padding:14px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    label{display:block;font-size:12px;color:var(--ui-muted);margin:10px 0 6px}
-    input[type="text"], select, textarea{
-      width:100%;border:1px solid var(--ui-border);background:rgba(0,0,0,.22);
-      color:var(--ui-text);padding:10px;border-radius:12px;outline:none;
-    }
-    textarea{min-height:120px;resize:vertical}
-    input[type="color"]{
-      width:100%;height:40px;border-radius:12px;border:1px solid var(--ui-border);
-      background:transparent;padding:4px;
-    }
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{
-      border:1px solid var(--ui-border);background:rgba(124,58,237,.18);
-      color:var(--ui-text);padding:10px 12px;border-radius:12px;cursor:pointer;
-      font-weight:600;font-size:13px;
-    }
-    button.primary{background:rgba(124,58,237,.32);border-color:rgba(124,58,237,.55)}
-    button.good{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45)}
-    button.bad{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45)}
-    .hint{margin-top:10px;color:var(--ui-muted);font-size:12px;line-height:1.35}
-    .status{margin-top:10px;font-size:12px}
-    .status.ok{color:#86efac}
-    .status.err{color:#fca5a5}
-    .code{
-      width:100%;min-height:260px;white-space:pre;overflow:auto;
-      border:1px solid var(--ui-border);background:rgba(0,0,0,.32);
-      color:#e5e7eb;padding:12px;border-radius:12px;font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      font-size:12px;line-height:1.35;
-    }
-    .mini{font-size:12px;color:var(--ui-muted)}
-    .sep{height:1px;background:var(--ui-border);margin:12px 0}
-    code{background:rgba(0,0,0,.22);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12)}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Genially Audio Player Builder</h1>
-      <div class="sub">
-        Редактор → предпросмотр → embed-код (прозрачный фон).<br>
-        GitHub repo по умолчанию: <code>onegovakota-cmyk/audiopleer</code> (public).
-      </div>
-    </div>
-    <div class="mini">Shuffle • Playlist • Seek • Diagnostics</div>
-  </header>
-
-  <div class="grid">
-    <section class="panel">
-      <div class="hd">
-        <b>Настройки</b>
-        <span class="mini" id="tracksCount">Треков: 0</span>
-      </div>
-
-      <div class="bd">
-        <label>Язык интерфейса</label>
-        <select id="lang">
-          <option value="ru" selected>Русский</option>
-          <option value="en">English</option>
-        </select>
-
-        <div class="row">
-          <div>
-            <label>Основной цвет</label>
-            <input id="primary" type="color" value="#7c3aed" />
-          </div>
-          <div>
-            <label>Акцент (progress)</label>
-            <input id="accent" type="color" value="#f97316" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Цвет текста</label>
-            <input id="textColor" type="color" value="#e8eefc" />
-          </div>
-          <div>
-            <label>Вторичный текст</label>
-            <input id="mutedColor" type="color" value="#a9b6d6" />
-          </div>
-        </div>
-
-        <label>Картинка внутри (URL)</label>
-        <input id="coverUrl" type="text" placeholder="https://.../cover.jpg"
-               value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop" />
-
-        <div class="sep"></div>
-
-        <label>Источник треков</label>
-        <select id="sourceMode">
-          <option value="github" selected>GitHub папка (public)</option>
-          <option value="raw">Raw ссылки (список)</option>
-        </select>
-
-        <div id="githubBox">
-          <div class="row">
-            <div>
-              <label>owner</label>
-              <input id="ghOwner" type="text" value="onegovakota-cmyk" />
-            </div>
-            <div>
-              <label>repo</label>
-              <input id="ghRepo" type="text" value="audiopleer" />
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label>Папка в репо (path)</label>
-              <input id="ghPath" type="text" value="audio" />
-            </div>
-            <div>
-              <label>Ветка (ref)</label>
-              <input id="ghRef" type="text" value="main" />
-            </div>
-          </div>
-
-          <div class="hint">
-            Поддерживаемые форматы: mp3, wav, ogg, m4a, aac.<br>
-            <b>Важно:</b> path может быть вида <code>assets/audio</code> — это поддерживается.<br>
-            Этот загрузчик ищет файлы и в подпапках (рекурсивно).
-          </div>
-        </div>
-
-        <div id="rawBox" style="display:none">
-          <label>Raw ссылки (по одной на строку)</label>
-          <textarea id="rawUrls" placeholder="https://raw.githubusercontent.com/.../track1.mp3&#10;https://.../track2.mp3"></textarea>
-          <div class="hint">
-            Для проверки можешь вставить тестовый mp3:<br>
-            <code>https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3</code>
-          </div>
-        </div>
-
-        <div class="btns">
-          <button class="good" id="loadTracksBtn">Загрузить треки</button>
-          <button class="primary" id="applyBtn">Применить в предпросмотр</button>
-          <button class="primary" id="getCodeBtn">Получить код</button>
-          <button class="bad" id="copyBtn">Скопировать код</button>
-        </div>
-
-        <div id="status" class="status"></div>
-
-        <div class="sep"></div>
-        <b style="font-size:13px">Сгенерированный embed-код</b>
-        <div class="hint" style="margin-top:6px">
-          Если в Genially не исполняется JS в HTML-вставке — вставляй через iframe (страницу на GitHub Pages/хостинге).
-        </div>
-        <pre class="code" id="codeOut"></pre>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="hd">
-        <b>Предпросмотр</b>
-        <span class="mini">фон прозрачный</span>
-      </div>
-      <div class="bd">
-        <div id="previewMount"></div>
-      </div>
-    </section>
-  </div>
-</div>
-
-<script>
-/* =========================
-   EMBED PLAYER TEMPLATE
-   ========================= */
-function buildEmbedHTML(config){
-  const safeJson = JSON.stringify(config).replace(/</g, "\\u003c");
-
-  return `<!-- Genially Audio Player (transparent) -->
 <div id="gaudio-root"></div>
-<script>
-(function(){
-  const CONFIG = ${safeJson};
 
-  const STR = {
-    ru: {
-      playlist: "Плейлист",
-      shuffleOn: "Рандом: ВКЛ",
-      shuffleOff: "Рандом: ВЫКЛ",
-      prev: "Назад",
-      next: "Вперёд",
-      play: "Воспроизвести",
-      pause: "Пауза",
-      empty: "Нет треков"
-    },
-    en: {
-      playlist: "Playlist",
-      shuffleOn: "Shuffle: ON",
-      shuffleOff: "Shuffle: OFF",
-      prev: "Prev",
-      next: "Next",
-      play: "Play",
-      pause: "Pause",
-      empty: "No tracks"
-    }
+<script>
+(() => {
+  // =========================
+  // CONFIG (НАСТРОЙКИ)
+  // =========================
+  const GITHUB_OWNER = "onegovakota-cmyk";
+  const GITHUB_REPO  = "audiopleer";
+  const GITHUB_PATH  = "audio";     // ← папка с треками. Если треки в корне — поставь ""
+  const GITHUB_REF   = "main";      // ← ветка: main / master / другая
+
+  const LANG = "ru"; // "ru" или "en"
+
+  const COLORS = {
+    primary: "#7c3aed",
+    accent:  "#f97316",
+    text:    "#e8eefc",
+    muted:   "#a9b6d6",
   };
 
-  const lang = (CONFIG.lang || "ru") in STR ? (CONFIG.lang || "ru") : "ru";
-  const T = STR[lang];
+  const COVER_URL = "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop";
+  const MAX_TRACKS = 500; // защита от очень больших репозиториев
 
+  // =========================
+  // STRINGS
+  // =========================
+  const STR = {
+    ru: {
+      loading: "Загружаю треки из GitHub…",
+      loadErr: "Не удалось загрузить треки",
+      empty:   "В папке не найдено аудиофайлов",
+      playlist:"Плейлист",
+      shuffleOn:"Рандом: ВКЛ",
+      shuffleOff:"Рандом: ВЫКЛ",
+      prev:"Назад",
+      next:"Вперёд",
+      play:"Воспроизвести",
+      pause:"Пауза",
+    },
+    en: {
+      loading: "Loading tracks from GitHub…",
+      loadErr: "Failed to load tracks",
+      empty:   "No audio files found in folder",
+      playlist:"Playlist",
+      shuffleOn:"Shuffle: ON",
+      shuffleOff:"Shuffle: OFF",
+      prev:"Prev",
+      next:"Next",
+      play:"Play",
+      pause:"Pause",
+    }
+  };
+  const T = STR[LANG] || STR.ru;
+
+  // =========================
+  // HELPERS
+  // =========================
+  const audioExt = /\.(mp3|wav|ogg|m4a|aac)$/i;
+
+  function fmtTime(s){
+    if(!isFinite(s) || s < 0) return "0:00";
+    const m = Math.floor(s/60);
+    const r = Math.floor(s%60);
+    return m + ":" + String(r).padStart(2,"0");
+  }
+
+  function guessNameFromUrl(url){
+    try{
+      const u = new URL(url);
+      const file = decodeURIComponent(u.pathname.split("/").pop() || "");
+      return file.replace(audioExt,"");
+    }catch(e){
+      const file = (url.split("/").pop() || "").split("?")[0];
+      return decodeURIComponent(file).replace(audioExt,"");
+    }
+  }
+
+  function setRangeVisual(rangeEl, pct){
+    const p = Math.max(0, Math.min(100, pct));
+    rangeEl.style.background = `linear-gradient(90deg, var(--a) ${p}%, rgba(255,255,255,.14) ${p}%)`;
+  }
+
+  function githubContentsUrl(owner, repo, path, ref){
+    const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
+    const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
+    return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
+  }
+
+  async function fetchJson(url){
+    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
+    const text = await res.text().catch(()=> "");
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    return {
+      ok: res.ok,
+      status: res.status,
+      statusText: res.statusText,
+      data,
+      url,
+      rateRemaining: res.headers.get("x-ratelimit-remaining"),
+      rateReset: res.headers.get("x-ratelimit-reset"),
+    };
+  }
+
+  async function loadTracksFromGitHub({owner, repo, path, ref}){
+    const refsToTry = Array.from(new Set([ref, "main", "master"].map(s => (s||"").trim()).filter(Boolean)));
+    const startPath = (path || "").trim();
+
+    async function walk(items, out){
+      for(const x of items){
+        if(out.length >= MAX_TRACKS) return;
+        if(!x) continue;
+
+        if(x.type === "file" && audioExt.test(x.name || "")){
+          out.push({
+            url: x.download_url,
+            title: (x.name || "").replace(audioExt,"") || guessNameFromUrl(x.download_url || "")
+          });
+          continue;
+        }
+
+        if(x.type === "dir" && x.url){
+          const sub = await fetchJson(x.url);
+          if(sub.ok && Array.isArray(sub.data)){
+            await walk(sub.data, out);
+          }
+        }
+      }
+    }
+
+    let lastErr = null;
+
+    for(const r of refsToTry){
+      const url = githubContentsUrl(owner, repo, startPath, r);
+      const res = await fetchJson(url);
+
+      if(!res.ok){
+        lastErr = res;
+        continue;
+      }
+
+      if(res.data && !Array.isArray(res.data) && res.data.type === "file"){
+        throw new Error(`PATH указывает на файл, а нужен путь к папке. URL: ${url}`);
+      }
+
+      if(!Array.isArray(res.data)){
+        lastErr = res;
+        continue;
+      }
+
+      const out = [];
+      await walk(res.data, out);
+
+      return { tracks: out, usedRef: r, usedPath: startPath || "(root)" };
+    }
+
+    const msg = (lastErr && typeof lastErr.data === "object" && lastErr.data?.message) ? lastErr.data.message : "";
+    const rate = lastErr?.rateRemaining != null ? ` (rate remaining: ${lastErr.rateRemaining})` : "";
+    throw new Error(`${T.loadErr}: ${lastErr?.status || ""} ${lastErr?.statusText || ""}${rate}${msg ? " — " + msg : ""}`);
+  }
+
+  // =========================
+  // UI MOUNT
+  // =========================
   const mount = document.getElementById("gaudio-root");
   if(!mount) return;
 
-  const css = \`
-  :root{
-    --p:\${CONFIG.colors?.primary || "#7c3aed"};
-    --a:\${CONFIG.colors?.accent || "#f97316"};
-    --t:\${CONFIG.colors?.text || "#e8eefc"};
-    --m:\${CONFIG.colors?.muted || "#a9b6d6"};
-  }
-  #gaudio{
-    width:min(520px,100%);
-    color:var(--t);
-    background:transparent;
-    user-select:none;
-  }
-  #gaudio .card{
-    border-radius:24px;
-    padding:18px 18px 14px;
-    border:1px solid rgba(255,255,255,.14);
-    background:rgba(15,20,34,.38);
-    backdrop-filter:blur(10px);
-    box-shadow:0 12px 40px rgba(0,0,0,.28);
-    overflow:hidden;
-  }
-  #gaudio .top{display:flex;gap:14px;align-items:center}
-  #gaudio .ring{
-    width:112px;height:112px;border-radius:999px;position:relative;flex:0 0 auto;
-    background:conic-gradient(from 180deg, var(--p), rgba(255,255,255,.10), var(--p));
-    padding:6px;
-  }
-  #gaudio .ring::after{
-    content:"";position:absolute;inset:6px;border-radius:999px;
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.12);
-  }
-  #gaudio .cover{
-    position:absolute;inset:14px;border-radius:999px;
-    background-size:cover;background-position:center;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
-    z-index:2;
-  }
-  #gaudio .meta{min-width:0}
-  #gaudio .title{
-    font-size:14px;font-weight:800;letter-spacing:.2px;line-height:1.2;margin:0;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  #gaudio .artist{
-    margin-top:6px;font-size:12px;color:var(--m);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  #gaudio .controls{
-    display:flex;align-items:center;justify-content:space-between;
-    margin-top:14px;gap:10px;
-  }
-  #gaudio .btn{
-    width:40px;height:40px;border-radius:14px;
-    border:1px solid rgba(255,255,255,.14);
-    background:rgba(0,0,0,.20);color:var(--t);
-    display:grid;place-items:center;cursor:pointer;
-  }
-  #gaudio .btn:hover{border-color:rgba(255,255,255,.26)}
-  #gaudio .btn.primary{
-    width:54px;height:54px;border-radius:18px;
-    background:rgba(0,0,0,.22);
-    border-color:rgba(255,255,255,.18);
-    box-shadow:0 12px 28px rgba(0,0,0,.20);
-  }
-  #gaudio .btn.primary .ic{transform:translateX(1px)}
-  #gaudio .btn.tog{
-    width:auto;height:40px;padding:0 12px;
-    font-size:12px;color:var(--m);
-    gap:8px;display:flex;align-items:center;justify-content:center;
-  }
-  #gaudio .btn.tog b{color:var(--t);font-weight:800}
-  #gaudio .progress{margin-top:14px}
-  #gaudio input[type="range"]{
-    width:100%;-webkit-appearance:none;appearance:none;
-    height:6px;border-radius:999px;
-    background:linear-gradient(90deg, var(--a) 0%, rgba(255,255,255,.14) 0%);
-    outline:none;
-  }
-  #gaudio input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;
-    width:14px;height:14px;border-radius:50%;
-    background:var(--a);
-    border:1px solid rgba(255,255,255,.25);
-    box-shadow:0 8px 20px rgba(0,0,0,.35);
-    cursor:pointer;
-  }
-  #gaudio .time{
-    display:flex;justify-content:space-between;
-    margin-top:8px;font-size:11px;color:var(--m);
-  }
-  #gaudio .bottom{
-    display:flex;align-items:center;justify-content:space-between;
-    margin-top:12px;
-  }
-  #gaudio .listBtn{
-    width:auto;height:38px;padding:0 12px;border-radius:14px;
-    border:1px solid rgba(255,255,255,.14);
-    background:rgba(0,0,0,.20);
-    color:var(--m);cursor:pointer;font-size:12px;
-  }
-  #gaudio .listBtn:hover{border-color:rgba(255,255,255,.24)}
-  #gaudio .badge{
-    font-size:10px;padding:4px 8px;border-radius:999px;
-    border:1px solid rgba(255,255,255,.14);
-    background:rgba(0,0,0,.18);color:var(--m);
-  }
-  #gaudio .listPanel{
-    margin-top:12px;border-top:1px solid rgba(255,255,255,.12);
-    padding-top:12px;display:none;
-  }
-  #gaudio .listPanel.open{display:block}
-  #gaudio .listTitle{
-    font-size:12px;color:var(--m);
-    display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:8px;
-  }
-  #gaudio .track{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:10px;border-radius:14px;
-    border:1px solid rgba(255,255,255,.10);
-    background:rgba(0,0,0,.16);
-    margin-bottom:8px;cursor:pointer;
-  }
-  #gaudio .track:hover{border-color:rgba(255,255,255,.22)}
-  #gaudio .track .name{
-    font-size:12px;font-weight:700;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    max-width:70%;
-  }
-  #gaudio .track .dur{font-size:11px;color:var(--m)}
-  #gaudio .track.active{
-    border-color:rgba(255,255,255,.28);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
-  }
-  \`;
-
   const style = document.createElement("style");
-  style.textContent = css;
+  style.textContent = `
+    :root{
+      --p:${COLORS.primary};
+      --a:${COLORS.accent};
+      --t:${COLORS.text};
+      --m:${COLORS.muted};
+    }
+    #gaudio{
+      width:min(520px,100%);
+      color:var(--t);
+      background:transparent;
+      user-select:none;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    #gaudio .card{
+      border-radius:24px;
+      padding:18px 18px 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(15,20,34,.38);
+      backdrop-filter:blur(10px);
+      box-shadow:0 12px 40px rgba(0,0,0,.28);
+      overflow:hidden;
+    }
+    #gaudio .top{display:flex;gap:14px;align-items:center}
+    #gaudio .ring{
+      width:112px;height:112px;border-radius:999px;position:relative;flex:0 0 auto;
+      background:conic-gradient(from 180deg, var(--p), rgba(255,255,255,.10), var(--p));
+      padding:6px;
+    }
+    #gaudio .ring::after{
+      content:"";position:absolute;inset:6px;border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    #gaudio .cover{
+      position:absolute;inset:14px;border-radius:999px;
+      background-size:cover;background-position:center;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+      z-index:2;
+    }
+    #gaudio .meta{min-width:0}
+    #gaudio .title{
+      font-size:14px;font-weight:800;letter-spacing:.2px;line-height:1.2;margin:0;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    #gaudio .artist{
+      margin-top:6px;font-size:12px;color:var(--m);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      min-height: 16px;
+    }
+    #gaudio .controls{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:14px;gap:10px;
+    }
+    #gaudio .btn{
+      width:40px;height:40px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);color:var(--t);
+      display:grid;place-items:center;cursor:pointer;
+    }
+    #gaudio .btn:hover{border-color:rgba(255,255,255,.26)}
+    #gaudio .btn.primary{
+      width:54px;height:54px;border-radius:18px;
+      background:rgba(0,0,0,.22);
+      border-color:rgba(255,255,255,.18);
+      box-shadow:0 12px 28px rgba(0,0,0,.20);
+    }
+    #gaudio .btn.primary .ic{transform:translateX(1px)}
+    #gaudio .btn.tog{
+      width:auto;height:40px;padding:0 12px;
+      font-size:12px;color:var(--m);
+      gap:8px;display:flex;align-items:center;justify-content:center;
+    }
+    #gaudio .btn.tog b{color:var(--t);font-weight:800}
+    #gaudio .progress{margin-top:14px}
+    #gaudio input[type="range"]{
+      width:100%;-webkit-appearance:none;appearance:none;
+      height:6px;border-radius:999px;
+      background:linear-gradient(90deg, var(--a) 0%, rgba(255,255,255,.14) 0%);
+      outline:none;
+    }
+    #gaudio input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:14px;height:14px;border-radius:50%;
+      background:var(--a);
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 8px 20px rgba(0,0,0,.35);
+      cursor:pointer;
+    }
+    #gaudio .time{
+      display:flex;justify-content:space-between;
+      margin-top:8px;font-size:11px;color:var(--m);
+    }
+    #gaudio .bottom{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:12px;
+    }
+    #gaudio .listBtn{
+      width:auto;height:38px;padding:0 12px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:var(--m);cursor:pointer;font-size:12px;
+    }
+    #gaudio .listBtn:hover{border-color:rgba(255,255,255,.24)}
+    #gaudio .badge{
+      font-size:10px;padding:4px 8px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);color:var(--m);
+    }
+    #gaudio .listPanel{
+      margin-top:12px;border-top:1px solid rgba(255,255,255,.12);
+      padding-top:12px;display:none;
+    }
+    #gaudio .listPanel.open{display:block}
+    #gaudio .listTitle{
+      font-size:12px;color:var(--m);
+      display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:8px;
+    }
+    #gaudio .track{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.16);
+      margin-bottom:8px;cursor:pointer;
+    }
+    #gaudio .track:hover{border-color:rgba(255,255,255,.22)}
+    #gaudio .track .name{
+      font-size:12px;font-weight:700;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      max-width:78%;
+    }
+    #gaudio .track.active{
+      border-color:rgba(255,255,255,.28);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+    }
+    #gaudio .statusLine{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--m);
+      white-space:pre-wrap;
+      line-height:1.35;
+    }
+  `;
   document.head.appendChild(style);
 
-  const el = document.createElement("div");
-  el.id = "gaudio";
-  el.innerHTML = \`
-    <div class="card">
-      <div class="top">
-        <div class="ring" aria-hidden="true">
-          <div class="cover" id="gaudio-cover"></div>
+  mount.innerHTML = `
+    <div id="gaudio">
+      <div class="card">
+        <div class="top">
+          <div class="ring" aria-hidden="true">
+            <div class="cover" id="gaudio-cover"></div>
+          </div>
+          <div class="meta">
+            <p class="title" id="gaudio-title">—</p>
+            <div class="artist" id="gaudio-artist">${T.loading}</div>
+          </div>
         </div>
-        <div class="meta">
-          <p class="title" id="gaudio-title">—</p>
-          <div class="artist" id="gaudio-artist">—</div>
+
+        <div class="controls">
+          <button class="btn" id="gaudio-prev" title="${T.prev}" aria-label="${T.prev}">⏮</button>
+          <button class="btn primary" id="gaudio-play" title="${T.play}" aria-label="${T.play}">
+            <span class="ic" id="gaudio-play-ic">▶</span>
+          </button>
+          <button class="btn" id="gaudio-next" title="${T.next}" aria-label="${T.next}">⏭</button>
+          <button class="btn tog" id="gaudio-shuffle" title="${T.shuffleOff}" aria-label="shuffle">
+            🔀 <b id="gaudio-shuf-state">OFF</b>
+          </button>
         </div>
-      </div>
 
-      <div class="controls">
-        <button class="btn" id="gaudio-prev" title="\${T.prev}" aria-label="\${T.prev}">
-          <span class="ic">⏮</span>
-        </button>
-
-        <button class="btn primary" id="gaudio-play" title="\${T.play}" aria-label="\${T.play}">
-          <span class="ic" id="gaudio-play-ic">▶</span>
-        </button>
-
-        <button class="btn" id="gaudio-next" title="\${T.next}" aria-label="\${T.next}">
-          <span class="ic">⏭</span>
-        </button>
-
-        <button class="btn tog" id="gaudio-shuffle" title="\${T.shuffleOff}" aria-label="shuffle">
-          <span>🔀</span><b id="gaudio-shuf-state">OFF</b>
-        </button>
-      </div>
-
-      <div class="progress">
-        <input id="gaudio-range" type="range" min="0" max="1000" value="0" />
-        <div class="time">
-          <span id="gaudio-cur">0:00</span>
-          <span id="gaudio-tot">0:00</span>
+        <div class="progress">
+          <input id="gaudio-range" type="range" min="0" max="1000" value="0" />
+          <div class="time">
+            <span id="gaudio-cur">0:00</span>
+            <span id="gaudio-tot">0:00</span>
+          </div>
         </div>
-      </div>
 
-      <div class="bottom">
-        <button class="listBtn" id="gaudio-listBtn">☰ \${T.playlist}</button>
-        <span class="badge" id="gaudio-count">0</span>
-      </div>
+        <div class="bottom">
+          <button class="listBtn" id="gaudio-listBtn">☰ ${T.playlist}</button>
+          <span class="badge" id="gaudio-count">0</span>
+        </div>
 
-      <div class="listPanel" id="gaudio-list"></div>
+        <div class="listPanel" id="gaudio-list"></div>
+        <div class="statusLine" id="gaudio-status"></div>
+      </div>
     </div>
-  \`;
-  mount.appendChild(el);
-
-  // ----- AUDIO -----
-  const audio = new Audio();
-  audio.preload = "metadata";
-
-  // DIAGNOSTICS (чтобы не было "тихо и непонятно")
-  function explainAudioError(err){
-    const code = err?.code;
-    const msg =
-      code === 1 ? "ABORTED (прервано)" :
-      code === 2 ? "NETWORK (не скачалось / 404 / доступ запрещён)" :
-      code === 3 ? "DECODE (скачалось, но не декодируется — кодек/битый файл)" :
-      code === 4 ? "SRC_NOT_SUPPORTED (формат/кодек не поддерживается)" :
-      "UNKNOWN";
-    alert("Audio error: " + msg + "\\nURL: " + (audio.src || "none"));
-  }
-  audio.addEventListener("error", ()=> explainAudioError(audio.error));
-  audio.addEventListener("stalled", ()=> alert("Audio stalled (загрузка застопорилась)\\nURL: " + (audio.src||"")));
-
-  const tracks = Array.isArray(CONFIG.tracks) ? CONFIG.tracks : [];
-  const coverUrl = CONFIG.coverUrl || "";
+  `;
 
   const $cover = document.getElementById("gaudio-cover");
   const $title = document.getElementById("gaudio-title");
   const $artist = document.getElementById("gaudio-artist");
+  const $status = document.getElementById("gaudio-status");
+
   const $play = document.getElementById("gaudio-play");
   const $playIc = document.getElementById("gaudio-play-ic");
   const $prev = document.getElementById("gaudio-prev");
@@ -466,34 +374,31 @@ function buildEmbedHTML(config){
   const $list = document.getElementById("gaudio-list");
   const $count = document.getElementById("gaudio-count");
 
-  $cover.style.backgroundImage = coverUrl ? \`url("\${coverUrl}")\` : "none";
+  $cover.style.backgroundImage = COVER_URL ? `url("${COVER_URL}")` : "none";
 
+  // =========================
+  // PLAYER LOGIC
+  // =========================
+  const audio = new Audio();
+  audio.preload = "metadata";
+
+  // Диагностика (если файл не поддерживается/404)
+  audio.addEventListener("error", () => {
+    const err = audio.error;
+    const code = err?.code;
+    const msg =
+      code === 1 ? "ABORTED" :
+      code === 2 ? "NETWORK (404/доступ/не скачалось)" :
+      code === 3 ? "DECODE (кодек/битый файл)" :
+      code === 4 ? "SRC_NOT_SUPPORTED (формат/кодек)" :
+      "UNKNOWN";
+    $status.textContent = `Audio error: ${msg}\nURL: ${audio.src || "none"}`;
+  });
+
+  let tracks = [];
   let index = 0;
   let isShuffle = false;
   let shuffleBag = [];
-
-  function fmtTime(s){
-    if(!isFinite(s) || s < 0) return "0:00";
-    const m = Math.floor(s/60);
-    const r = Math.floor(s%60);
-    return m + ":" + String(r).padStart(2,"0");
-  }
-
-  function setRangeVisual(pct){
-    const p = Math.max(0, Math.min(100, pct));
-    $range.style.background = \`linear-gradient(90deg, var(--a) \${p}%, rgba(255,255,255,.14) \${p}%)\`;
-  }
-
-  function guessNameFromUrl(url){
-    try{
-      const u = new URL(url);
-      const file = decodeURIComponent(u.pathname.split("/").pop() || "");
-      return file.replace(/\\.(mp3|wav|ogg|m4a|aac)$/i,"");
-    }catch(e){
-      const file = (url.split("/").pop() || "").split("?")[0];
-      return decodeURIComponent(file).replace(/\\.(mp3|wav|ogg|m4a|aac)$/i,"");
-    }
-  }
 
   function currentTrack(){ return tracks[index] || null; }
 
@@ -509,37 +414,36 @@ function buildEmbedHTML(config){
     $artist.textContent = t.artist || "";
   }
 
+  function refreshActiveRow(){
+    Array.from($list.querySelectorAll(".track")).forEach(el=>{
+      const i = Number(el.getAttribute("data-i"));
+      el.classList.toggle("active", i===index);
+    });
+  }
+
   function renderList(){
     $count.textContent = String(tracks.length);
     const rows = tracks.map((t,i)=>{
-      const name = (t.title || guessNameFromUrl(t.url || ""));
-      return \`
-        <div class="track \${i===index ? "active":""}" data-i="\${i}">
-          <div class="name" title="\${name.replaceAll('"','&quot;')}">\${name}</div>
-          <div class="dur"></div>
-        </div>\`;
+      const name = t.title || guessNameFromUrl(t.url || "");
+      return `
+        <div class="track ${i===index ? "active":""}" data-i="${i}">
+          <div class="name" title="${name.replaceAll('"','&quot;')}">${name}</div>
+        </div>`;
     }).join("");
 
-    $list.innerHTML = \`
+    $list.innerHTML = `
       <div class="listTitle">
-        <span>\${T.playlist}</span>
-        <span class="badge">\${tracks.length}</span>
+        <span>${T.playlist}</span>
+        <span class="badge">${tracks.length}</span>
       </div>
-      \${rows}
-    \`;
+      ${rows}
+    `;
 
     Array.from($list.querySelectorAll(".track")).forEach(el=>{
       el.addEventListener("click", ()=>{
         const i = Number(el.getAttribute("data-i"));
         if(Number.isFinite(i)) loadAndPlay(i, true);
       });
-    });
-  }
-
-  function refreshActiveRow(){
-    Array.from($list.querySelectorAll(".track")).forEach(el=>{
-      const i = Number(el.getAttribute("data-i"));
-      el.classList.toggle("active", i===index);
     });
   }
 
@@ -550,6 +454,7 @@ function buildEmbedHTML(config){
     audio.src = t.url;
     renderMeta();
     refreshActiveRow();
+    $status.textContent = "";
   }
 
   function ensureShuffleBag(){
@@ -585,7 +490,7 @@ function buildEmbedHTML(config){
     load(i);
     if(autoplay){
       try{ await audio.play(); }
-      catch(e){ alert("play() rejected: " + (e?.name || e)); }
+      catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
       syncPlayUI();
     }
   }
@@ -602,7 +507,7 @@ function buildEmbedHTML(config){
     if(!audio.src) load(index);
     if(audio.paused){
       try{ await audio.play(); }
-      catch(e){ alert("play() rejected: " + (e?.name || e)); }
+      catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
     }else{
       audio.pause();
     }
@@ -632,215 +537,49 @@ function buildEmbedHTML(config){
     if(!isFinite(audio.duration) || audio.duration<=0) return;
     const p = audio.currentTime / audio.duration;
     $range.value = String(Math.round(p*1000));
-    setRangeVisual(p*100);
+    setRangeVisual($range, p*100);
     $cur.textContent = fmtTime(audio.currentTime);
   });
 
-  audio.addEventListener("loadedmetadata", ()=>{
-    $tot.textContent = fmtTime(audio.duration);
-  });
-
+  audio.addEventListener("loadedmetadata", ()=> { $tot.textContent = fmtTime(audio.duration); });
   audio.addEventListener("ended", ()=> loadAndPlay(nextIndex(), true));
   audio.addEventListener("play", syncPlayUI);
   audio.addEventListener("pause", syncPlayUI);
 
-  renderMeta();
-  renderList();
-  setRangeVisual(0);
-  if(tracks.length) load(0);
+  // =========================
+  // INIT LOAD from GitHub
+  // =========================
+  (async () => {
+    try{
+      $artist.textContent = T.loading;
+      $status.textContent = `repo: ${GITHUB_OWNER}/${GITHUB_REPO}\npath: ${GITHUB_PATH || "(root)"}\nref: ${GITHUB_REF}`;
 
-})();
-<\/script>
-<!-- /Genially Audio Player -->
-`;
-}
+      const res = await loadTracksFromGitHub({
+        owner: GITHUB_OWNER,
+        repo:  GITHUB_REPO,
+        path:  GITHUB_PATH,
+        ref:   GITHUB_REF
+      });
 
-/* =========================
-   BUILDER (EDITOR)
-   ========================= */
-const els = {
-  lang: document.getElementById("lang"),
-  primary: document.getElementById("primary"),
-  accent: document.getElementById("accent"),
-  textColor: document.getElementById("textColor"),
-  mutedColor: document.getElementById("mutedColor"),
-  coverUrl: document.getElementById("coverUrl"),
-  sourceMode: document.getElementById("sourceMode"),
-  githubBox: document.getElementById("githubBox"),
-  rawBox: document.getElementById("rawBox"),
-  ghOwner: document.getElementById("ghOwner"),
-  ghRepo: document.getElementById("ghRepo"),
-  ghPath: document.getElementById("ghPath"),
-  ghRef: document.getElementById("ghRef"),
-  rawUrls: document.getElementById("rawUrls"),
-  loadTracksBtn: document.getElementById("loadTracksBtn"),
-  applyBtn: document.getElementById("applyBtn"),
-  getCodeBtn: document.getElementById("getCodeBtn"),
-  copyBtn: document.getElementById("copyBtn"),
-  status: document.getElementById("status"),
-  codeOut: document.getElementById("codeOut"),
-  previewMount: document.getElementById("previewMount"),
-  tracksCount: document.getElementById("tracksCount"),
-};
+      tracks = res.tracks;
 
-let tracks = [];
-
-function setStatus(msg, type){
-  els.status.textContent = msg || "";
-  els.status.className = "status " + (type || "");
-}
-function updateCount(){
-  els.tracksCount.textContent = "Треков: " + tracks.length;
-}
-function isAudioFile(name){
-  return /\.(mp3|wav|ogg|m4a|aac)$/i.test(name || "");
-}
-
-// корректное кодирование path по сегментам (assets/audio) + рекурсивный обход подпапок
-async function loadFromGitHub(owner, repo, path, ref){
-  const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
-  const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
-  const api = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref || "main")}`;
-
-  const res = await fetch(api, { headers: { "Accept": "application/vnd.github+json" } });
-  if(!res.ok){
-    const t = await res.text().catch(()=> "");
-    throw new Error(`GitHub API error: ${res.status} ${res.statusText}${t ? " — " + t : ""}`);
-  }
-  const data = await res.json();
-
-  if (data && !Array.isArray(data) && data.type === "file") {
-    throw new Error("path указывает на файл. Укажи путь к папке.");
-  }
-  if(!Array.isArray(data)) throw new Error("Ожидался список файлов (проверь owner/repo/path/ref).");
-
-  async function walk(items){
-    const out = [];
-    for(const x of items){
-      if(!x) continue;
-      if(x.type === "file" && isAudioFile(x.name)){
-        out.push({ url: x.download_url, title: x.name.replace(/\.(mp3|wav|ogg|m4a|aac)$/i,"") });
-      }else if(x.type === "dir" && x.url){
-        const subRes = await fetch(x.url, { headers: { "Accept": "application/vnd.github+json" } });
-        if(!subRes.ok) continue;
-        const sub = await subRes.json();
-        if(Array.isArray(sub)){
-          const subOut = await walk(sub);
-          out.push(...subOut);
-        }
+      if(!tracks.length){
+        $artist.textContent = T.empty;
+        $status.textContent = `Папка найдена, но аудио не найдено.\nref=${res.usedRef} path=${res.usedPath}`;
+        return;
       }
+
+      $status.textContent = `✅ Треков: ${tracks.length}\nref=${res.usedRef} path=${res.usedPath}`;
+      index = 0;
+      renderMeta();
+      renderList();
+      setRangeVisual($range, 0);
+      load(0);
+      $artist.textContent = ""; // очищаем "loading"
+    }catch(e){
+      $artist.textContent = T.loadErr;
+      $status.textContent = String(e?.message || e);
     }
-    return out;
-  }
-
-  const aud = await walk(data);
-  if(aud.length === 0) throw new Error("Не найдено аудиофайлов (mp3/wav/ogg/m4a/aac) в этой папке и подпапках.");
-  return aud;
-}
-
-function loadFromRawList(text){
-  const urls = (text || "")
-    .split("\n")
-    .map(s => s.trim())
-    .filter(Boolean);
-  const aud = urls.map(u=>({url:u}));
-  if(aud.length === 0) throw new Error("Список raw-ссылок пуст.");
-  return aud;
-}
-
-function buildConfig(){
-  return {
-    lang: els.lang.value,
-    coverUrl: els.coverUrl.value.trim(),
-    colors: {
-      primary: els.primary.value,
-      accent: els.accent.value,
-      text: els.textColor.value,
-      muted: els.mutedColor.value,
-    },
-    tracks: tracks
-  };
-}
-
-function mountPreview(){
-  els.previewMount.innerHTML = "";
-  const cfg = buildConfig();
-  const html = buildEmbedHTML(cfg);
-
-  const sandbox = document.createElement("div");
-  sandbox.innerHTML = html;
-  els.previewMount.appendChild(sandbox);
-
-  // Выполняем <script> из вставки
-  sandbox.querySelectorAll("script").forEach(scr=>{
-    const s = document.createElement("script");
-    if(scr.src) s.src = scr.src;
-    s.textContent = scr.textContent;
-    scr.replaceWith(s);
-  });
-}
-
-els.sourceMode.addEventListener("change", ()=>{
-  const m = els.sourceMode.value;
-  els.githubBox.style.display = (m==="github") ? "" : "none";
-  els.rawBox.style.display = (m==="raw") ? "" : "none";
-  setStatus("", "");
-});
-
-els.loadTracksBtn.addEventListener("click", async ()=>{
-  setStatus("Загружаю треки…", "");
-  try{
-    if(els.sourceMode.value === "github"){
-      const owner = els.ghOwner.value.trim();
-      const repo  = els.ghRepo.value.trim();
-      const path  = els.ghPath.value.trim();
-      const ref   = els.ghRef.value.trim() || "main";
-      if(!owner || !repo) throw new Error("Заполни owner и repo.");
-      tracks = await loadFromGitHub(owner, repo, path, ref);
-    }else{
-      tracks = loadFromRawList(els.rawUrls.value);
-    }
-    updateCount();
-    setStatus("Треки загружены: " + tracks.length, "ok");
-    mountPreview();
-  }catch(e){
-    setStatus(e.message || String(e), "err");
-  }
-});
-
-els.applyBtn.addEventListener("click", ()=>{
-  try{
-    mountPreview();
-    setStatus("Применено в предпросмотр.", "ok");
-  }catch(e){
-    setStatus(e.message || String(e), "err");
-  }
-});
-
-els.getCodeBtn.addEventListener("click", ()=>{
-  try{
-    const cfg = buildConfig();
-    const code = buildEmbedHTML(cfg);
-    els.codeOut.textContent = code;
-    setStatus("Код сгенерирован.", "ok");
-  }catch(e){
-    setStatus(e.message || String(e), "err");
-  }
-});
-
-els.copyBtn.addEventListener("click", async ()=>{
-  try{
-    const txt = els.codeOut.textContent || "";
-    if(!txt.trim()) throw new Error("Сначала нажми «Получить код».");
-    await navigator.clipboard.writeText(txt);
-    setStatus("Скопировано в буфер обмена.", "ok");
-  }catch(e){
-    setStatus(e.message || String(e), "err");
-  }
-});
-
-updateCount();
-mountPreview();
+  })();
+})();
 </script>
-</body>
-</html>
