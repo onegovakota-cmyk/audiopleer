@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audio Player</title>
+
+<style>
+:root{
+  --p:#7c3aed;
+  --a:#f97316;
+  --t:#e8eefc;
+  --m:#a9b6d6;
+}
+body{
+  margin:0;
+  background:transparent;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+}
+#player{
+  width:520px;
+  max-width:100%;
+  color:var(--t);
+}
+.card{
+  border-radius:24px;
+  padding:18px;
+  background:rgba(15,20,34,.45);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 12px 40px rgba(0,0,0,.3);
+}
+.top{display:flex;gap:14px;align-items:center}
+.cover-wrap{
+  width:110px;height:110px;border-radius:50%;
+  background:conic-gradient(var(--p),var(--a),var(--p));
+  padding:6px;
+  position:relative;
+}
+.cover{
+  position:absolute;inset:14px;border-radius:50%;
+  background:url("https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600") center/cover;
+}
+.title{font-weight:800;font-size:14px;margin:0}
+.artist{font-size:12px;color:var(--m);margin-top:6px}
+
+.controls{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-top:14px;
+}
+.btn{
+  width:42px;height:42px;border-radius:14px;
+  background:rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.15);
+  display:grid;place-items:center;
+  cursor:pointer;
+}
+.btn.big{width:56px;height:56px;font-size:18px}
+.progress{margin-top:14px}
+input[type=range]{
+  width:100%;appearance:none;height:6px;border-radius:10px;
+  background:#444;
+}
+.time{display:flex;justify-content:space-between;font-size:11px;color:var(--m)}
+.list{margin-top:12px;display:none}
+.list.open{display:block}
+.track{
+  padding:8px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+  margin-bottom:6px;
+  cursor:pointer;font-size:12px;
+}
+.track.active{border-color:var(--a)}
+</style>
+</head>
+
+<body>
+<div id="player">
+  <div class="card">
+    <div class="top">
+      <div class="cover-wrap"><div class="cover"></div></div>
+      <div>
+        <div class="title" id="title">—</div>
+        <div class="artist" id="artist">Loading…</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="btn" id="prev">⏮</div>
+      <div class="btn big" id="play">▶</div>
+      <div class="btn" id="next">⏭</div>
+      <div class="btn" id="listBtn">☰</div>
+    </div>
+
+    <div class="progress">
+      <input id="range" type="range" min="0" max="1000" value="0">
+      <div class="time">
+        <span id="cur">0:00</span>
+        <span id="dur">0:00</span>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<script>
+const owner="onegovakota-cmyk";
+const repo="audiopleer";
+
+const audio=new Audio();
+let tracks=[],index=0;
+
+function name(url){
+  return decodeURIComponent(url.split("/").pop().replace(/\.(mp3|wav|ogg|m4a)$/i,""));
+}
+
+async function load(){
+  const res=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents`);
+  const data=await res.json();
+  tracks=data.filter(f=>f.type==="file" && /\.(mp3|wav|ogg|m4a)$/i.test(f.name));
+  render();
+}
+
+function render(){
+  document.getElementById("artist").textContent=tracks.length+" tracks";
+  const list=document.getElementById("list");
+  list.innerHTML="";
+  tracks.forEach((t,i)=>{
+    const d=document.createElement("div");
+    d.className="track"+(i===index?" active":"");
+    d.textContent=name(t.download_url);
+    d.onclick=()=>play(i);
+    list.appendChild(d);
+  });
+  play(0);
+}
+
+function play(i){
+  index=i;
+  audio.src=tracks[i].download_url;
+  audio.play();
+  document.getElementById("title").textContent=name(audio.src);
+}
+
+document.getElementById("play").onclick=()=>{
+  if(audio.paused){audio.play()}else{audio.pause()}
+};
+document.getElementById("prev").onclick=()=>play((index-1+tracks.length)%tracks.length);
+document.getElementById("next").onclick=()=>play((index+1)%tracks.length);
+document.getElementById("listBtn").onclick=()=>document.getElementById("list").classList.toggle("open");
+
+load();
+</script>
+</body>
+</html>
+
