@@ -94,14 +94,17 @@
       margin-top:8px;font-size:11px;color:var(--m);
     }
 
-    /* VOLUME */
     #gaudio .volRow{
       margin-top:10px;
       display:flex;align-items:center;gap:10px;
     }
     #gaudio .volIcon{font-size:14px;color:var(--m);width:18px;text-align:center}
-    #gaudio .vol{
-      flex:1;
+    #gaudio .vol{flex:1}
+    #gaudio .muteBtn{
+      width:40px;height:40px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);color:var(--t);
+      display:grid;place-items:center;cursor:pointer;
     }
 
     #gaudio .bottom{
@@ -150,6 +153,13 @@
       margin-top:10px;font-size:12px;color:var(--m);
       white-space:pre-wrap;line-height:1.35;
     }
+    #gaudio .build{
+      margin-top:8px;
+      font-size:10px;
+      color:rgba(255,255,255,.35);
+      text-align:right;
+      user-select:text;
+    }
   </style>
 </head>
 
@@ -188,6 +198,7 @@
       <div class="volRow">
         <div class="volIcon" id="gaudio-vol-ic">🔊</div>
         <input class="vol" id="gaudio-vol" type="range" min="0" max="100" value="85" />
+        <button class="muteBtn" id="gaudio-mute" title="Mute">🔇</button>
       </div>
 
       <div class="bottom">
@@ -197,16 +208,16 @@
 
       <div class="listPanel" id="gaudio-list"></div>
       <div class="statusLine" id="gaudio-status"></div>
+      <div class="build" id="gaudio-build">BUILD: v3-progress-volume-2026-02-01-3</div>
     </div>
   </div>
 
 <script>
 (() => {
-  // ✅ repo как на скрине:
   const GITHUB_OWNER = "onegovakota-cmyk";
   const GITHUB_REPO  = "audiopleer";
-  const GITHUB_PATH  = "";      // треки в корне
-  const GITHUB_REF   = "main";  // если ветка другая — master
+  const GITHUB_PATH  = "";      // корень
+  const GITHUB_REF   = "main";
 
   const COVER_URL = "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop";
   const MAX_TRACKS = 500;
@@ -232,6 +243,7 @@
 
   const $vol = document.getElementById("gaudio-vol");
   const $volIc = document.getElementById("gaudio-vol-ic");
+  const $mute = document.getElementById("gaudio-mute");
 
   $cover.style.backgroundImage = COVER_URL ? `url("${COVER_URL}")` : "none";
 
@@ -241,12 +253,10 @@
     const r = Math.floor(s%60);
     return m + ":" + String(r).padStart(2,"0");
   }
-
   function setRangeVisual(el, pct){
     const p = Math.max(0, Math.min(100, pct));
     el.style.background = `linear-gradient(90deg, var(--a) ${p}%, rgba(255,255,255,.14) ${p}%)`;
   }
-
   function guessNameFromUrl(url){
     try{
       const u = new URL(url);
@@ -263,7 +273,6 @@
     const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
     return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
   }
-
   async function fetchJson(url){
     const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
     const txt = await res.text().catch(()=> "");
@@ -271,7 +280,6 @@
     try { data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
     return { ok: res.ok, status: res.status, statusText: res.statusText, data, url };
   }
-
   async function loadTracksFromGitHub(){
     const refsToTry = Array.from(new Set([GITHUB_REF, "main", "master"].map(s=>(s||"").trim()).filter(Boolean)));
 
@@ -292,8 +300,6 @@
     let lastErr = null;
     for(const r of refsToTry){
       const url = contentsUrl(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, r);
-      $status.textContent = `GitHub: ${GITHUB_OWNER}/${GITHUB_REPO}\npath: ${GITHUB_PATH || "(root)"}\nref: ${r}`;
-
       const res = await fetchJson(url);
       if(!res.ok){ lastErr = res; continue; }
       if(!Array.isArray(res.data)){ lastErr = res; continue; }
@@ -311,19 +317,33 @@
   const audio = new Audio();
   audio.preload = "metadata";
 
-  // Громкость по умолчанию
+  let tracks = [];
+  let index = 0;
+  let isShuffle = false;
+  let shuffleBag = [];
+  let isSeeking = false;
+  let rafId = null;
+
+  function currentTrack(){ return tracks[index] || null; }
+
   function setVolUI(v01){
     const v = Math.max(0, Math.min(1, v01));
     audio.volume = v;
     $vol.value = String(Math.round(v*100));
     setRangeVisual($vol, v*100);
     $volIc.textContent = v === 0 ? "🔇" : (v < 0.5 ? "🔉" : "🔊");
+    $mute.textContent = audio.muted || v===0 ? "🔈" : "🔇";
   }
   setVolUI(0.85);
 
   $vol.addEventListener("input", ()=>{
-    const v = Number($vol.value)/100;
-    setVolUI(v);
+    audio.muted = false;
+    setVolUI(Number($vol.value)/100);
+  });
+
+  $mute.addEventListener("click", ()=>{
+    audio.muted = !audio.muted;
+    $mute.textContent = audio.muted ? "🔈" : "🔇";
   });
 
   audio.addEventListener("error", () => {
@@ -337,14 +357,6 @@
       "UNKNOWN";
     $status.textContent = `Audio error: ${msg}\nURL: ${audio.src || "none"}`;
   });
-
-  let tracks = [];
-  let index = 0;
-  let isShuffle = false;
-  let shuffleBag = [];
-  let isSeeking = false;
-
-  function currentTrack(){ return tracks[index] || null; }
 
   function renderMeta(){
     const t = currentTrack();
@@ -391,15 +403,33 @@
     });
   }
 
-  function setProgressByTime(){
-    if(!isFinite(audio.duration) || audio.duration <= 0) return;
+  function updateProgressUI(){
+    if(!isFinite(audio.duration) || audio.duration<=0){
+      $tot.textContent = "0:00";
+      $cur.textContent = fmtTime(audio.currentTime || 0);
+      return;
+    }
+    $tot.textContent = fmtTime(audio.duration);
 
-    const p = audio.currentTime / audio.duration;
+    const p = (audio.currentTime / audio.duration);
     if(!isSeeking){
-      $range.value = String(Math.round(p * 1000));
-      setRangeVisual($range, p * 100);
+      $range.value = String(Math.round(p*1000));
+      setRangeVisual($range, p*100);
     }
     $cur.textContent = fmtTime(audio.currentTime);
+  }
+
+  function startRAF(){
+    stopRAF();
+    const tick = () => {
+      updateProgressUI();
+      if(!audio.paused) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  }
+  function stopRAF(){
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId = null;
   }
 
   function load(i){
@@ -412,7 +442,7 @@
       return;
     }
 
-    // Сброс UI прогресса
+    // reset progress
     $cur.textContent = "0:00";
     $tot.textContent = "0:00";
     $range.value = "0";
@@ -464,7 +494,6 @@
   function syncPlayUI(){
     const playing = !audio.paused;
     $playIc.textContent = playing ? "⏸" : "▶";
-    $play.title = playing ? "Пауза" : "Воспроизвести";
   }
 
   // Controls
@@ -487,14 +516,13 @@
   $shuffle.addEventListener("click", ()=>{
     isShuffle = !isShuffle;
     $shufState.textContent = isShuffle ? "ON" : "OFF";
-    $shuffle.title = isShuffle ? "Рандом: ВКЛ" : "Рандом: ВЫКЛ";
     shuffleBag = [];
     if(isShuffle) ensureShuffleBag();
   });
 
   $listBtn.addEventListener("click", ()=> $list.classList.toggle("open"));
 
-  // Seek: чтобы бегунок не дёргался при перетаскивании
+  // Seek
   $range.addEventListener("pointerdown", ()=> { isSeeking = true; });
   window.addEventListener("pointerup", ()=> { isSeeking = false; });
 
@@ -509,36 +537,38 @@
     if(!isFinite(audio.duration) || audio.duration<=0) return;
     const p = Number($range.value)/1000;
     audio.currentTime = p * audio.duration;
-    setProgressByTime();
+    updateProgressUI();
   });
 
-  // Audio events: вот это и заставляет "бежать" прогресс и время
-  audio.addEventListener("loadedmetadata", ()=>{
-    $tot.textContent = fmtTime(audio.duration);
-    setProgressByTime();
-  });
+  // Audio events
+  audio.addEventListener("loadedmetadata", updateProgressUI);
+  audio.addEventListener("durationchange", updateProgressUI);
+  audio.addEventListener("timeupdate", updateProgressUI);
 
-  audio.addEventListener("durationchange", ()=>{
-    if(isFinite(audio.duration) && audio.duration>0) $tot.textContent = fmtTime(audio.duration);
+  audio.addEventListener("play", ()=>{
+    syncPlayUI();
+    startRAF();   // ✅ гарантированно “бежит”
   });
-
-  audio.addEventListener("timeupdate", ()=>{
-    setProgressByTime();
+  audio.addEventListener("pause", ()=>{
+    syncPlayUI();
+    stopRAF();
+    updateProgressUI();
   });
-
-  audio.addEventListener("ended", ()=> loadAndPlay(nextIndex(), true));
-  audio.addEventListener("play", syncPlayUI);
-  audio.addEventListener("pause", syncPlayUI);
+  audio.addEventListener("ended", ()=>{
+    stopRAF();
+    loadAndPlay(nextIndex(), true);
+  });
 
   // INIT
   (async () => {
     try{
+      $artist.textContent = "Загружаю треки…";
       const res = await loadTracksFromGitHub();
       tracks = res.tracks;
 
       if(!tracks.length){
         $artist.textContent = "В корне репозитория нет mp3/wav/ogg/m4a/aac";
-        $status.textContent += "\nПодсказка: файлы должны быть именно в репозитории, не архивом.";
+        $status.textContent = "Подсказка: файлы должны быть именно в репозитории, не архивом.";
         return;
       }
 
@@ -547,6 +577,7 @@
       load(0);
       $artist.textContent = "";
       setRangeVisual($range, 0);
+      updateProgressUI();
     }catch(e){
       $artist.textContent = "Ошибка загрузки";
       $status.textContent = String(e?.message || e);
