@@ -1,496 +1,216 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Редактор аудиоплеера для Genially</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>audiopleer player</title>
+
   <style>
     :root{
-      --bg1:#070a12;
-      --bg2:#0b1224;
-      --card:rgba(16,24,42,.55);
-      --border:rgba(255,255,255,.12);
-      --text:#e8eefc;
-      --muted:#a9b6d6;
+      --p:#7c3aed;
+      --a:#f97316;
+      --t:#e8eefc;
+      --m:#a9b6d6;
     }
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-    body{margin:0;color:var(--text);background:linear-gradient(120deg,var(--bg1),var(--bg2) 60%,var(--bg1))}
-    .wrap{max-width:1200px;margin:0 auto;padding:18px}
-    header{
-      border:1px solid var(--border);border-radius:16px;background:var(--card);
-      backdrop-filter: blur(10px);padding:14px 16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start
+    body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    #gaudio{width:min(520px,100%);color:var(--t);background:transparent;user-select:none}
+    #gaudio .card{
+      border-radius:24px;padding:18px 18px 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(15,20,34,.38);
+      backdrop-filter:blur(10px);
+      box-shadow:0 12px 40px rgba(0,0,0,.28);
+      overflow:hidden;
     }
-    h1{margin:0;font-size:16px}
-    .sub{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
-    .grid{display:grid;grid-template-columns:460px 1fr;gap:16px;margin-top:16px}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-    .panel{
-      border:1px solid var(--border);border-radius:16px;background:var(--card);
-      backdrop-filter: blur(10px);overflow:hidden
+    #gaudio .top{display:flex;gap:14px;align-items:center}
+    #gaudio .ring{
+      width:112px;height:112px;border-radius:999px;position:relative;flex:0 0 auto;
+      background:conic-gradient(from 180deg, var(--p), rgba(255,255,255,.10), var(--p));
+      padding:6px;
     }
-    .hd{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .hd b{font-size:13px}
-    .bd{padding:14px}
-    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input[type="text"], select, textarea{
-      width:100%;border:1px solid var(--border);background:rgba(0,0,0,.22);
-      color:var(--text);padding:10px;border-radius:12px;outline:none;
+    #gaudio .ring::after{
+      content:"";position:absolute;inset:6px;border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
     }
-    input[type="color"]{
-      width:100%;height:40px;border-radius:12px;border:1px solid var(--border);background:transparent;padding:4px;
+    #gaudio .cover{
+      position:absolute;inset:14px;border-radius:999px;
+      background-size:cover;background-position:center;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+      z-index:2;
     }
-    textarea{min-height:120px;resize:vertical}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-    button{
-      border:1px solid var(--border);background:rgba(124,58,237,.18);
-      color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px;
+    #gaudio .meta{min-width:0}
+    #gaudio .title{
+      font-size:14px;font-weight:800;letter-spacing:.2px;line-height:1.2;margin:0;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
-    button.primary{background:rgba(124,58,237,.32);border-color:rgba(124,58,237,.55)}
-    button.good{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.45)}
-    button.bad{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.45)}
-    .hint{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.35}
-    .status{margin-top:10px;font-size:12px;white-space:pre-wrap;line-height:1.35}
-    .status.ok{color:#86efac}
-    .status.err{color:#fca5a5}
-    .sep{height:1px;background:var(--border);margin:12px 0}
-    .code{
-      width:100%;min-height:220px;white-space:pre;overflow:auto;
-      border:1px solid var(--border);background:rgba(0,0,0,.32);
-      color:#e5e7eb;padding:12px;border-radius:12px;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      font-size:12px;line-height:1.35;
+    #gaudio .artist{
+      margin-top:6px;font-size:12px;color:var(--m);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;
     }
-    .mini{font-size:12px;color:var(--muted)}
-    .previewBox{padding:14px}
-    iframe{width:100%;height:460px;border:0;background:transparent;border-radius:14px}
-    code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2px 6px;border-radius:8px}
+
+    #gaudio .controls{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:14px;gap:10px;
+    }
+    #gaudio .btn{
+      width:40px;height:40px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);color:var(--t);
+      display:grid;place-items:center;cursor:pointer;
+    }
+    #gaudio .btn:hover{border-color:rgba(255,255,255,.26)}
+    #gaudio .btn.primary{
+      width:54px;height:54px;border-radius:18px;
+      background:rgba(0,0,0,.22);
+      border-color:rgba(255,255,255,.18);
+      box-shadow:0 12px 28px rgba(0,0,0,.20);
+    }
+    #gaudio .btn.primary .ic{transform:translateX(1px)}
+    #gaudio .btn.tog{
+      width:auto;height:40px;padding:0 12px;font-size:12px;color:var(--m);
+      gap:8px;display:flex;align-items:center;justify-content:center;
+    }
+    #gaudio .btn.tog b{color:var(--t);font-weight:800}
+
+    #gaudio .progress{margin-top:14px}
+    #gaudio input[type="range"]{
+      width:100%;
+      -webkit-appearance:none;appearance:none;
+      height:6px;border-radius:999px;
+      background:linear-gradient(90deg, var(--a) 0%, rgba(255,255,255,.14) 0%);
+      outline:none;
+    }
+    #gaudio input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:14px;height:14px;border-radius:50%;
+      background:var(--a);
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 8px 20px rgba(0,0,0,.35);
+      cursor:pointer;
+    }
+    #gaudio .time{
+      display:flex;justify-content:space-between;
+      margin-top:8px;font-size:11px;color:var(--m);
+    }
+
+    /* VOLUME */
+    #gaudio .volRow{
+      margin-top:10px;
+      display:flex;align-items:center;gap:10px;
+    }
+    #gaudio .volIcon{font-size:14px;color:var(--m);width:18px;text-align:center}
+    #gaudio .vol{
+      flex:1;
+    }
+
+    #gaudio .bottom{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:12px;
+    }
+    #gaudio .listBtn{
+      width:auto;height:38px;padding:0 12px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:var(--m);cursor:pointer;font-size:12px;
+    }
+    #gaudio .listBtn:hover{border-color:rgba(255,255,255,.24)}
+    #gaudio .badge{
+      font-size:10px;padding:4px 8px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);color:var(--m);
+    }
+
+    #gaudio .listPanel{
+      margin-top:12px;border-top:1px solid rgba(255,255,255,.12);
+      padding-top:12px;display:none;
+    }
+    #gaudio .listPanel.open{display:block}
+    #gaudio .listTitle{
+      font-size:12px;color:var(--m);
+      display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
+    }
+    #gaudio .track{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.16);
+      margin-bottom:8px;cursor:pointer;
+    }
+    #gaudio .track:hover{border-color:rgba(255,255,255,.22)}
+    #gaudio .track .name{
+      font-size:12px;font-weight:700;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%;
+    }
+    #gaudio .track.active{
+      border-color:rgba(255,255,255,.28);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+    }
+    #gaudio .statusLine{
+      margin-top:10px;font-size:12px;color:var(--m);
+      white-space:pre-wrap;line-height:1.35;
+    }
   </style>
 </head>
+
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Редактор аудиоплеера (GitHub → Genially через iframe)</h1>
-      <div class="sub">
-        Слева: настройки и источник треков → справа: предпросмотр → ниже: генерируется <b>player.html</b> и <b>iframe</b> для Genially.<br>
-        Репозиторий по умолчанию: <code>onegovakota-cmyk/audiopleer</code>, треки в корне (path пустой).
+  <div id="gaudio">
+    <div class="card">
+      <div class="top">
+        <div class="ring" aria-hidden="true">
+          <div class="cover" id="gaudio-cover"></div>
+        </div>
+        <div class="meta">
+          <p class="title" id="gaudio-title">—</p>
+          <div class="artist" id="gaudio-artist">Загружаю треки…</div>
+        </div>
       </div>
+
+      <div class="controls">
+        <button class="btn" id="gaudio-prev" title="Назад" aria-label="Назад">⏮</button>
+        <button class="btn primary" id="gaudio-play" title="Воспроизвести" aria-label="Воспроизвести">
+          <span class="ic" id="gaudio-play-ic">▶</span>
+        </button>
+        <button class="btn" id="gaudio-next" title="Вперёд" aria-label="Вперёд">⏭</button>
+        <button class="btn tog" id="gaudio-shuffle" title="Рандом: ВЫК" aria-label="shuffle">
+          🔀 <b id="gaudio-shuf-state">OFF</b>
+        </button>
+      </div>
+
+      <div class="progress">
+        <input id="gaudio-range" type="range" min="0" max="1000" value="0" />
+        <div class="time">
+          <span id="gaudio-cur">0:00</span>
+          <span id="gaudio-tot">0:00</span>
+        </div>
+      </div>
+
+      <div class="volRow">
+        <div class="volIcon" id="gaudio-vol-ic">🔊</div>
+        <input class="vol" id="gaudio-vol" type="range" min="0" max="100" value="85" />
+      </div>
+
+      <div class="bottom">
+        <button class="listBtn" id="gaudio-listBtn">☰ Плейлист</button>
+        <span class="badge" id="gaudio-count">0</span>
+      </div>
+
+      <div class="listPanel" id="gaudio-list"></div>
+      <div class="statusLine" id="gaudio-status"></div>
     </div>
-    <div class="mini">Preview • Playlist • Shuffle • Seek</div>
-  </header>
-
-  <div class="grid">
-    <section class="panel">
-      <div class="hd">
-        <b>Настройки редактора</b>
-        <span class="mini" id="tracksCount">Треков: 0</span>
-      </div>
-
-      <div class="bd">
-        <label>Язык интерфейса</label>
-        <select id="lang">
-          <option value="ru" selected>Русский</option>
-          <option value="en">English</option>
-        </select>
-
-        <div class="row">
-          <div>
-            <label>Основной цвет</label>
-            <input id="primary" type="color" value="#7c3aed"/>
-          </div>
-          <div>
-            <label>Акцент (progress)</label>
-            <input id="accent" type="color" value="#f97316"/>
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Цвет текста</label>
-            <input id="textColor" type="color" value="#e8eefc"/>
-          </div>
-          <div>
-            <label>Вторичный текст</label>
-            <input id="mutedColor" type="color" value="#a9b6d6"/>
-          </div>
-        </div>
-
-        <label>Обложка (URL)</label>
-        <input id="coverUrl" type="text"
-          value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop"/>
-
-        <div class="sep"></div>
-
-        <label>Источник треков</label>
-        <select id="sourceMode">
-          <option value="github" selected>GitHub (public)</option>
-          <option value="raw">Raw ссылки (по строкам)</option>
-        </select>
-
-        <div id="githubBox">
-          <div class="row">
-            <div>
-              <label>owner</label>
-              <input id="ghOwner" type="text" value="onegovakota-cmyk"/>
-            </div>
-            <div>
-              <label>repo</label>
-              <input id="ghRepo" type="text" value="audiopleer"/>
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>path (папка)</label>
-              <input id="ghPath" type="text" value=""/>
-            </div>
-            <div>
-              <label>ref (ветка)</label>
-              <input id="ghRef" type="text" value="main"/>
-            </div>
-          </div>
-
-          <div class="hint">
-            Если треки в корне репозитория — <code>path</code> оставь пустым.<br>
-            Если треки в папке (например <code>audio</code>) — укажи её.
-          </div>
-        </div>
-
-        <div id="rawBox" style="display:none">
-          <label>Raw ссылки (по одной на строку)</label>
-          <textarea id="rawUrls" placeholder="https://raw.githubusercontent.com/.../track1.mp3&#10;https://raw.githubusercontent.com/.../track2.mp3"></textarea>
-        </div>
-
-        <div class="btns">
-          <button class="good" id="loadTracksBtn">1) Загрузить треки</button>
-          <button class="primary" id="applyBtn">2) Обновить предпросмотр</button>
-          <button class="primary" id="getCodeBtn">3) Получить код</button>
-          <button class="bad" id="copyPlayerBtn">Скопировать player.html</button>
-          <button class="bad" id="copyIframeBtn">Скопировать iframe</button>
-        </div>
-
-        <div id="status" class="status"></div>
-
-        <div class="sep"></div>
-
-        <b style="font-size:13px">Сгенерированный файл: player.html</b>
-        <pre class="code" id="playerOut"></pre>
-
-        <div class="sep"></div>
-
-        <b style="font-size:13px">Код для вставки в Genially (iframe)</b>
-        <pre class="code" id="iframeOut"></pre>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="hd">
-        <b>Предпросмотр</b>
-        <span class="mini">это именно player.html</span>
-      </div>
-      <div class="previewBox">
-        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
-      </div>
-    </section>
   </div>
-</div>
-
-<script>
-  const els = {
-    lang: document.getElementById("lang"),
-    primary: document.getElementById("primary"),
-    accent: document.getElementById("accent"),
-    textColor: document.getElementById("textColor"),
-    mutedColor: document.getElementById("mutedColor"),
-    coverUrl: document.getElementById("coverUrl"),
-    sourceMode: document.getElementById("sourceMode"),
-    githubBox: document.getElementById("githubBox"),
-    rawBox: document.getElementById("rawBox"),
-    ghOwner: document.getElementById("ghOwner"),
-    ghRepo: document.getElementById("ghRepo"),
-    ghPath: document.getElementById("ghPath"),
-    ghRef: document.getElementById("ghRef"),
-    rawUrls: document.getElementById("rawUrls"),
-    loadTracksBtn: document.getElementById("loadTracksBtn"),
-    applyBtn: document.getElementById("applyBtn"),
-    getCodeBtn: document.getElementById("getCodeBtn"),
-    copyPlayerBtn: document.getElementById("copyPlayerBtn"),
-    copyIframeBtn: document.getElementById("copyIframeBtn"),
-    status: document.getElementById("status"),
-    tracksCount: document.getElementById("tracksCount"),
-    playerOut: document.getElementById("playerOut"),
-    iframeOut: document.getElementById("iframeOut"),
-    previewFrame: document.getElementById("previewFrame"),
-  };
-
-  const audioExt = /\.(mp3|wav|ogg|m4a|aac)$/i;
-  let tracks = []; // [{url,title}]
-
-  function setStatus(msg, type){
-    els.status.textContent = msg || "";
-    els.status.className = "status " + (type || "");
-  }
-  function updateCount(){ els.tracksCount.textContent = "Треков: " + tracks.length; }
-  function isAudioFile(name){ return audioExt.test(name || ""); }
-
-  function contentsApiUrl(owner, repo, path, ref){
-    const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
-    const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
-    return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
-  }
-
-  async function fetchJson(url){
-    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
-    const txt = await res.text().catch(()=> "");
-    let data = null;
-    try{ data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
-    return { ok: res.ok, status: res.status, statusText: res.statusText, data, url };
-  }
-
-  async function loadFromGitHub(owner, repo, path, ref){
-    const refsToTry = Array.from(new Set([ref, "main", "master"].map(s => (s||"").trim()).filter(Boolean)));
-    const cleanPath = (path || "").trim();
-
-    async function walk(items, out){
-      for(const x of items){
-        if(!x) continue;
-        if(x.type === "file" && isAudioFile(x.name)){
-          out.push({ url: x.download_url, title: (x.name || "").replace(audioExt,"") });
-        } else if(x.type === "dir" && x.url){
-          const sub = await fetchJson(x.url);
-          if(sub.ok && Array.isArray(sub.data)) await walk(sub.data, out);
-        }
-      }
-    }
-
-    let lastErr = null;
-    for(const r of refsToTry){
-      const url = contentsApiUrl(owner, repo, cleanPath, r);
-      const res = await fetchJson(url);
-
-      if(!res.ok){ lastErr = res; continue; }
-      if(res.data && !Array.isArray(res.data) && res.data.type === "file"){
-        throw new Error("path указывает на файл — укажи путь к папке или оставь пустым для корня.");
-      }
-      if(!Array.isArray(res.data)){ lastErr = res; continue; }
-
-      const out = [];
-      await walk(res.data, out);
-      return { tracks: out, usedRef: r, usedPath: cleanPath || "(root)" };
-    }
-
-    const msg = (lastErr && typeof lastErr.data === "object" && lastErr.data?.message) ? lastErr.data.message : "";
-    throw new Error(`GitHub API error: ${lastErr?.status || ""} ${lastErr?.statusText || ""}${msg ? " — " + msg : ""}`);
-  }
-
-  function loadFromRawList(text){
-    const urls = (text || "").split("\n").map(s=>s.trim()).filter(Boolean);
-    if(urls.length === 0) throw new Error("Список raw-ссылок пуст.");
-    return urls.map(u=>({ url:u, title:"" }));
-  }
-
-  function buildConfig(){
-    return {
-      lang: els.lang.value,
-      coverUrl: els.coverUrl.value.trim(),
-      colors: {
-        primary: els.primary.value,
-        accent: els.accent.value,
-        text: els.textColor.value,
-        muted: els.mutedColor.value,
-      },
-      github: {
-        owner: els.ghOwner.value.trim(),
-        repo:  els.ghRepo.value.trim(),
-        path:  els.ghPath.value.trim(),
-        ref:   els.ghRef.value.trim() || "main",
-      },
-      tracks: tracks
-    };
-  }
-
-  function buildPlayerHtml(cfg){
-    const safeCfg = JSON.stringify(cfg).replace(/</g, "\\u003c");
-
-    return `<!doctype html>
-<html lang="${cfg.lang}">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Audio Player</title>
-<style>
-:root{
-  --p:${cfg.colors.primary};
-  --a:${cfg.colors.accent};
-  --t:${cfg.colors.text};
-  --m:${cfg.colors.muted};
-}
-body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-#gaudio{width:min(520px,100%);color:var(--t);background:transparent;user-select:none}
-#gaudio .card{
-  border-radius:24px;padding:18px 18px 14px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(15,20,34,.38);
-  backdrop-filter:blur(10px);
-  box-shadow:0 12px 40px rgba(0,0,0,.28);
-  overflow:hidden;
-}
-#gaudio .top{display:flex;gap:14px;align-items:center}
-#gaudio .ring{
-  width:112px;height:112px;border-radius:999px;position:relative;flex:0 0 auto;
-  background:conic-gradient(from 180deg, var(--p), rgba(255,255,255,.10), var(--p));
-  padding:6px;
-}
-#gaudio .ring::after{
-  content:"";position:absolute;inset:6px;border-radius:999px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-}
-#gaudio .cover{
-  position:absolute;inset:14px;border-radius:999px;
-  background-size:cover;background-position:center;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
-  z-index:2;
-}
-#gaudio .meta{min-width:0}
-#gaudio .title{
-  font-size:14px;font-weight:800;letter-spacing:.2px;line-height:1.2;margin:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-#gaudio .artist{
-  margin-top:6px;font-size:12px;color:var(--m);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;
-}
-#gaudio .controls{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:14px;gap:10px;
-}
-#gaudio .btn{
-  width:40px;height:40px;border-radius:14px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(0,0,0,.20);color:var(--t);
-  display:grid;place-items:center;cursor:pointer;
-}
-#gaudio .btn:hover{border-color:rgba(255,255,255,.26)}
-#gaudio .btn.primary{
-  width:54px;height:54px;border-radius:18px;
-  background:rgba(0,0,0,.22);
-  border-color:rgba(255,255,255,.18);
-  box-shadow:0 12px 28px rgba(0,0,0,.20);
-}
-#gaudio .btn.primary .ic{transform:translateX(1px)}
-#gaudio .btn.tog{
-  width:auto;height:40px;padding:0 12px;font-size:12px;color:var(--m);
-  gap:8px;display:flex;align-items:center;justify-content:center;
-}
-#gaudio .btn.tog b{color:var(--t);font-weight:800}
-#gaudio .progress{margin-top:14px}
-#gaudio input[type="range"]{
-  width:100%;-webkit-appearance:none;appearance:none;
-  height:6px;border-radius:999px;
-  background:linear-gradient(90deg, var(--a) 0%, rgba(255,255,255,.14) 0%);
-  outline:none;
-}
-#gaudio input[type="range"]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:14px;height:14px;border-radius:50%;
-  background:var(--a);
-  border:1px solid rgba(255,255,255,.25);
-  box-shadow:0 8px 20px rgba(0,0,0,.35);
-  cursor:pointer;
-}
-#gaudio .time{
-  display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--m);
-}
-#gaudio .bottom{
-  display:flex;align-items:center;justify-content:space-between;margin-top:12px;
-}
-#gaudio .listBtn{
-  width:auto;height:38px;padding:0 12px;border-radius:14px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(0,0,0,.20);
-  color:var(--m);cursor:pointer;font-size:12px;
-}
-#gaudio .listBtn:hover{border-color:rgba(255,255,255,.24)}
-#gaudio .badge{
-  font-size:10px;padding:4px 8px;border-radius:999px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(0,0,0,.18);color:var(--m);
-}
-#gaudio .listPanel{
-  margin-top:12px;border-top:1px solid rgba(255,255,255,.12);
-  padding-top:12px;display:none;
-}
-#gaudio .listPanel.open{display:block}
-#gaudio .listTitle{
-  font-size:12px;color:var(--m);
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
-}
-#gaudio .track{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px;border-radius:14px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(0,0,0,.16);
-  margin-bottom:8px;cursor:pointer;
-}
-#gaudio .track:hover{border-color:rgba(255,255,255,.22)}
-#gaudio .track .name{
-  font-size:12px;font-weight:700;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78%;
-}
-#gaudio .track.active{
-  border-color:rgba(255,255,255,.28);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
-}
-#gaudio .statusLine{
-  margin-top:10px;font-size:12px;color:var(--m);
-  white-space:pre-wrap;line-height:1.35;
-}
-</style>
-</head>
-<body>
-<div id="gaudio">
-  <div class="card">
-    <div class="top">
-      <div class="ring" aria-hidden="true">
-        <div class="cover" id="gaudio-cover"></div>
-      </div>
-      <div class="meta">
-        <p class="title" id="gaudio-title">—</p>
-        <div class="artist" id="gaudio-artist">${cfg.lang==="en" ? "Ready" : "Готово"}</div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="btn" id="gaudio-prev" title="prev">⏮</button>
-      <button class="btn primary" id="gaudio-play" title="play"><span class="ic" id="gaudio-play-ic">▶</span></button>
-      <button class="btn" id="gaudio-next" title="next">⏭</button>
-      <button class="btn tog" id="gaudio-shuffle" title="shuffle">🔀 <b id="gaudio-shuf-state">OFF</b></button>
-    </div>
-
-    <div class="progress">
-      <input id="gaudio-range" type="range" min="0" max="1000" value="0" />
-      <div class="time">
-        <span id="gaudio-cur">0:00</span>
-        <span id="gaudio-tot">0:00</span>
-      </div>
-    </div>
-
-    <div class="bottom">
-      <button class="listBtn" id="gaudio-listBtn">☰ ${cfg.lang==="en" ? "Playlist" : "Плейлист"}</button>
-      <span class="badge" id="gaudio-count">0</span>
-    </div>
-
-    <div class="listPanel" id="gaudio-list"></div>
-    <div class="statusLine" id="gaudio-status"></div>
-  </div>
-</div>
 
 <script>
 (() => {
-  const CFG = ${safeCfg};
-  const audioExt = /\\.(mp3|wav|ogg|m4a|aac)$/i;
+  // ✅ repo как на скрине:
+  const GITHUB_OWNER = "onegovakota-cmyk";
+  const GITHUB_REPO  = "audiopleer";
+  const GITHUB_PATH  = "";      // треки в корне
+  const GITHUB_REF   = "main";  // если ветка другая — master
+
+  const COVER_URL = "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop";
+  const MAX_TRACKS = 500;
+  const audioExt = /\.(mp3|wav|ogg|m4a|aac)$/i;
 
   const $cover  = document.getElementById("gaudio-cover");
   const $title  = document.getElementById("gaudio-title");
@@ -510,7 +230,10 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   const $list = document.getElementById("gaudio-list");
   const $count = document.getElementById("gaudio-count");
 
-  $cover.style.backgroundImage = CFG.coverUrl ? \`url("\${CFG.coverUrl}")\` : "none";
+  const $vol = document.getElementById("gaudio-vol");
+  const $volIc = document.getElementById("gaudio-vol-ic");
+
+  $cover.style.backgroundImage = COVER_URL ? `url("${COVER_URL}")` : "none";
 
   function fmtTime(s){
     if(!isFinite(s) || s < 0) return "0:00";
@@ -518,10 +241,12 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
     const r = Math.floor(s%60);
     return m + ":" + String(r).padStart(2,"0");
   }
-  function setRangeVisual(pct){
+
+  function setRangeVisual(el, pct){
     const p = Math.max(0, Math.min(100, pct));
-    $range.style.background = \`linear-gradient(90deg, var(--a) \${p}%, rgba(255,255,255,.14) \${p}%)\`;
+    el.style.background = `linear-gradient(90deg, var(--a) ${p}%, rgba(255,255,255,.14) ${p}%)`;
   }
+
   function guessNameFromUrl(url){
     try{
       const u = new URL(url);
@@ -532,15 +257,74 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
       return decodeURIComponent(file).replace(audioExt,"");
     }
   }
-  function isAbs(u){ return /^https?:\\/\\//i.test(u||""); }
 
-  let tracks = Array.isArray(CFG.tracks) ? CFG.tracks : [];
-  let index = 0;
-  let isShuffle = false;
-  let shuffleBag = [];
+  function contentsUrl(owner, repo, path, ref){
+    const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
+    const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
+    return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
+  }
 
+  async function fetchJson(url){
+    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
+    const txt = await res.text().catch(()=> "");
+    let data = null;
+    try { data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
+    return { ok: res.ok, status: res.status, statusText: res.statusText, data, url };
+  }
+
+  async function loadTracksFromGitHub(){
+    const refsToTry = Array.from(new Set([GITHUB_REF, "main", "master"].map(s=>(s||"").trim()).filter(Boolean)));
+
+    async function walk(items, out){
+      for(const x of items){
+        if(out.length >= MAX_TRACKS) return;
+        if(!x) continue;
+
+        if(x.type === "file" && audioExt.test(x.name || "")){
+          out.push({ url: x.download_url, title: (x.name || "").replace(audioExt,"") });
+        } else if(x.type === "dir" && x.url){
+          const sub = await fetchJson(x.url);
+          if(sub.ok && Array.isArray(sub.data)) await walk(sub.data, out);
+        }
+      }
+    }
+
+    let lastErr = null;
+    for(const r of refsToTry){
+      const url = contentsUrl(GITHUB_OWNER, GITHUB_REPO, GITHUB_PATH, r);
+      $status.textContent = `GitHub: ${GITHUB_OWNER}/${GITHUB_REPO}\npath: ${GITHUB_PATH || "(root)"}\nref: ${r}`;
+
+      const res = await fetchJson(url);
+      if(!res.ok){ lastErr = res; continue; }
+      if(!Array.isArray(res.data)){ lastErr = res; continue; }
+
+      const out = [];
+      await walk(res.data, out);
+      return { tracks: out, usedRef: r };
+    }
+
+    const msg = (lastErr && typeof lastErr.data === "object" && lastErr.data?.message) ? lastErr.data.message : "";
+    throw new Error(`GitHub API error: ${lastErr?.status || ""} ${lastErr?.statusText || ""}${msg ? " — " + msg : ""}`);
+  }
+
+  // ---------------- Player ----------------
   const audio = new Audio();
   audio.preload = "metadata";
+
+  // Громкость по умолчанию
+  function setVolUI(v01){
+    const v = Math.max(0, Math.min(1, v01));
+    audio.volume = v;
+    $vol.value = String(Math.round(v*100));
+    setRangeVisual($vol, v*100);
+    $volIc.textContent = v === 0 ? "🔇" : (v < 0.5 ? "🔉" : "🔊");
+  }
+  setVolUI(0.85);
+
+  $vol.addEventListener("input", ()=>{
+    const v = Number($vol.value)/100;
+    setVolUI(v);
+  });
 
   audio.addEventListener("error", () => {
     const err = audio.error;
@@ -551,8 +335,14 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
       code === 3 ? "DECODE (кодек/битый файл)" :
       code === 4 ? "SRC_NOT_SUPPORTED (формат/кодек)" :
       "UNKNOWN";
-    $status.textContent = \`Audio error: \${msg}\\nURL: \${audio.src || "none"}\`;
+    $status.textContent = `Audio error: ${msg}\nURL: ${audio.src || "none"}`;
   });
+
+  let tracks = [];
+  let index = 0;
+  let isShuffle = false;
+  let shuffleBag = [];
+  let isSeeking = false;
 
   function currentTrack(){ return tracks[index] || null; }
 
@@ -560,7 +350,7 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
     const t = currentTrack();
     if(!t){
       $title.textContent = "—";
-      $artist.textContent = (CFG.lang==="en" ? "No tracks" : "Нет треков");
+      $artist.textContent = "Нет треков";
       $tot.textContent = "0:00";
       return;
     }
@@ -579,19 +369,19 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
     $count.textContent = String(tracks.length);
     const rows = tracks.map((t,i)=>{
       const name = t.title || guessNameFromUrl(t.url || "");
-      return \`
-        <div class="track \${i===index ? "active":""}" data-i="\${i}">
-          <div class="name" title="\${name.replaceAll('"','&quot;')}">\${name}</div>
-        </div>\`;
+      return `
+        <div class="track ${i===index ? "active":""}" data-i="${i}">
+          <div class="name" title="${name.replaceAll('"','&quot;')}">${name}</div>
+        </div>`;
     }).join("");
 
-    $list.innerHTML = \`
+    $list.innerHTML = `
       <div class="listTitle">
-        <span>\${CFG.lang==="en" ? "Playlist" : "Плейлист"}</span>
-        <span class="badge">\${tracks.length}</span>
+        <span>Плейлист</span>
+        <span class="badge">${tracks.length}</span>
       </div>
-      \${rows}
-    \`;
+      ${rows}
+    `;
 
     Array.from($list.querySelectorAll(".track")).forEach(el=>{
       el.addEventListener("click", ()=>{
@@ -601,14 +391,33 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
     });
   }
 
+  function setProgressByTime(){
+    if(!isFinite(audio.duration) || audio.duration <= 0) return;
+
+    const p = audio.currentTime / audio.duration;
+    if(!isSeeking){
+      $range.value = String(Math.round(p * 1000));
+      setRangeVisual($range, p * 100);
+    }
+    $cur.textContent = fmtTime(audio.currentTime);
+  }
+
   function load(i){
     if(!tracks.length) return;
     index = (i + tracks.length) % tracks.length;
     const t = currentTrack();
-    if(!isAbs(t.url)){
-      $status.textContent = "Track URL must be absolute https://\\nGot: " + String(t.url || "");
+
+    if(!/^https?:\/\//i.test(t.url || "")){
+      $status.textContent = "Ошибка: ссылка на трек должна начинаться с https://\n" + String(t.url || "");
       return;
     }
+
+    // Сброс UI прогресса
+    $cur.textContent = "0:00";
+    $tot.textContent = "0:00";
+    $range.value = "0";
+    setRangeVisual($range, 0);
+
     audio.src = t.url;
     renderMeta();
     refreshActiveRow();
@@ -646,7 +455,8 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   async function loadAndPlay(i, autoplay){
     load(i);
     if(autoplay){
-      try{ await audio.play(); } catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
+      try{ await audio.play(); }
+      catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
       syncPlayUI();
     }
   }
@@ -654,14 +464,18 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   function syncPlayUI(){
     const playing = !audio.paused;
     $playIc.textContent = playing ? "⏸" : "▶";
+    $play.title = playing ? "Пауза" : "Воспроизвести";
   }
 
+  // Controls
   $play.addEventListener("click", async ()=>{
     if(!tracks.length) return;
     if(!audio.src) load(index);
+
     if(audio.paused){
-      try{ await audio.play(); } catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
-    } else {
+      try{ await audio.play(); }
+      catch(e){ $status.textContent = "play() rejected: " + (e?.name || e); }
+    }else{
       audio.pause();
     }
     syncPlayUI();
@@ -673,126 +487,72 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   $shuffle.addEventListener("click", ()=>{
     isShuffle = !isShuffle;
     $shufState.textContent = isShuffle ? "ON" : "OFF";
+    $shuffle.title = isShuffle ? "Рандом: ВКЛ" : "Рандом: ВЫКЛ";
     shuffleBag = [];
     if(isShuffle) ensureShuffleBag();
   });
 
   $listBtn.addEventListener("click", ()=> $list.classList.toggle("open"));
 
+  // Seek: чтобы бегунок не дёргался при перетаскивании
+  $range.addEventListener("pointerdown", ()=> { isSeeking = true; });
+  window.addEventListener("pointerup", ()=> { isSeeking = false; });
+
   $range.addEventListener("input", ()=>{
     if(!isFinite(audio.duration) || audio.duration<=0) return;
     const p = Number($range.value)/1000;
+    setRangeVisual($range, p*100);
+    $cur.textContent = fmtTime(p * audio.duration);
+  });
+
+  $range.addEventListener("change", ()=>{
+    if(!isFinite(audio.duration) || audio.duration<=0) return;
+    const p = Number($range.value)/1000;
     audio.currentTime = p * audio.duration;
+    setProgressByTime();
+  });
+
+  // Audio events: вот это и заставляет "бежать" прогресс и время
+  audio.addEventListener("loadedmetadata", ()=>{
+    $tot.textContent = fmtTime(audio.duration);
+    setProgressByTime();
+  });
+
+  audio.addEventListener("durationchange", ()=>{
+    if(isFinite(audio.duration) && audio.duration>0) $tot.textContent = fmtTime(audio.duration);
   });
 
   audio.addEventListener("timeupdate", ()=>{
-    if(!isFinite(audio.duration) || audio.duration<=0) return;
-    const p = audio.currentTime / audio.duration;
-    $range.value = String(Math.round(p*1000));
-    setRangeVisual(p*100);
-    $cur.textContent = fmtTime(audio.currentTime);
+    setProgressByTime();
   });
 
-  audio.addEventListener("loadedmetadata", ()=> { $tot.textContent = fmtTime(audio.duration); });
   audio.addEventListener("ended", ()=> loadAndPlay(nextIndex(), true));
   audio.addEventListener("play", syncPlayUI);
   audio.addEventListener("pause", syncPlayUI);
 
-  renderMeta();
-  renderList();
-  setRangeVisual(0);
-  if(tracks.length) load(0);
-})();
-<\/script>
-</body>
-</html>`;
-  }
-
-  function mountPreview(){
-    const cfg = buildConfig();
-    els.previewFrame.srcdoc = buildPlayerHtml(cfg);
-  }
-
-  function updateOutputs(){
-    const cfg = buildConfig();
-    const playerHtml = buildPlayerHtml(cfg);
-    els.playerOut.textContent = playerHtml;
-
-    const owner = cfg.github.owner || "onegovakota-cmyk";
-    const repo  = cfg.github.repo  || "audiopleer";
-    const pageUrl = `https://${owner}.github.io/${repo}/player.html`;
-
-    els.iframeOut.textContent =
-`<iframe
-  src="${pageUrl}"
-  style="width:520px;max-width:100%;height:430px;border:0;background:transparent;"
-  allow="autoplay; encrypted-media"
-></iframe>`;
-  }
-
-  els.sourceMode.addEventListener("change", ()=>{
-    const m = els.sourceMode.value;
-    els.githubBox.style.display = (m==="github") ? "" : "none";
-    els.rawBox.style.display = (m==="raw") ? "" : "none";
-    setStatus("", "");
-  });
-
-  els.loadTracksBtn.addEventListener("click", async ()=>{
-    setStatus("Загружаю треки…", "");
+  // INIT
+  (async () => {
     try{
-      if(els.sourceMode.value === "github"){
-        const owner = els.ghOwner.value.trim();
-        const repo  = els.ghRepo.value.trim();
-        const path  = els.ghPath.value.trim();
-        const ref   = els.ghRef.value.trim() || "main";
+      const res = await loadTracksFromGitHub();
+      tracks = res.tracks;
 
-        const res = await loadFromGitHub(owner, repo, path, ref);
-        tracks = res.tracks;
-
-        updateCount();
-        setStatus(`✅ Загружено: ${tracks.length}\nref: ${res.usedRef}\npath: ${res.usedPath}`, "ok");
-      } else {
-        tracks = loadFromRawList(els.rawUrls.value);
-        updateCount();
-        setStatus(`✅ Загружено: ${tracks.length} (raw list)`, "ok");
+      if(!tracks.length){
+        $artist.textContent = "В корне репозитория нет mp3/wav/ogg/m4a/aac";
+        $status.textContent += "\nПодсказка: файлы должны быть именно в репозитории, не архивом.";
+        return;
       }
 
-      mountPreview();
-      updateOutputs();
+      $status.textContent = `✅ Треков: ${tracks.length}\nrepo: ${GITHUB_OWNER}/${GITHUB_REPO}\npath: (root)\nref: ${res.usedRef}`;
+      renderList();
+      load(0);
+      $artist.textContent = "";
+      setRangeVisual($range, 0);
     }catch(e){
-      setStatus(e.message || String(e), "err");
+      $artist.textContent = "Ошибка загрузки";
+      $status.textContent = String(e?.message || e);
     }
-  });
-
-  els.applyBtn.addEventListener("click", ()=>{
-    mountPreview();
-    setStatus("Предпросмотр обновлён.", "ok");
-  });
-
-  els.getCodeBtn.addEventListener("click", ()=>{
-    updateOutputs();
-    setStatus("Код сгенерирован.", "ok");
-  });
-
-  async function copyText(txt){
-    if(!txt.trim()) throw new Error("Нечего копировать. Нажми «Получить код».");
-    await navigator.clipboard.writeText(txt);
-  }
-
-  els.copyPlayerBtn.addEventListener("click", async ()=>{
-    try{ await copyText(els.playerOut.textContent || ""); setStatus("Скопировано: player.html", "ok"); }
-    catch(e){ setStatus(e.message || String(e), "err"); }
-  });
-
-  els.copyIframeBtn.addEventListener("click", async ()=>{
-    try{ await copyText(els.iframeOut.textContent || ""); setStatus("Скопировано: iframe", "ok"); }
-    catch(e){ setStatus(e.message || String(e), "err"); }
-  });
-
-  // init
-  updateCount();
-  updateOutputs();
-  mountPreview();
+  })();
+})();
 </script>
 </body>
 </html>
