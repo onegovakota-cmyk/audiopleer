@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Audio Player Editor (for Genially)</title>
+  <title>Редактор аудиоплеера для Genially</title>
   <style>
     :root{
       --bg1:#070a12;
@@ -22,7 +22,7 @@
     }
     h1{margin:0;font-size:16px}
     .sub{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
-    .grid{display:grid;grid-template-columns:440px 1fr;gap:16px;margin-top:16px}
+    .grid{display:grid;grid-template-columns:460px 1fr;gap:16px;margin-top:16px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
     .panel{
       border:1px solid var(--border);border-radius:16px;background:var(--card);
@@ -63,7 +63,7 @@
     }
     .mini{font-size:12px;color:var(--muted)}
     .previewBox{padding:14px}
-    iframe{width:100%;height:460px;border:0;background:transparent}
+    iframe{width:100%;height:460px;border:0;background:transparent;border-radius:14px}
     code{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12);padding:2px 6px;border-radius:8px}
   </style>
 </head>
@@ -71,10 +71,10 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Редактор аудиоплеера (под Genially)</h1>
+      <h1>Редактор аудиоплеера (GitHub → Genially через iframe)</h1>
       <div class="sub">
-        Настраиваешь дизайн + источник треков → смотришь предпросмотр → получаешь <b>player.html</b> и <b>iframe</b> для Genially.<br>
-        Рекомендуемый способ для Genially: <b>GitHub Pages + iframe</b> (так JS точно работает).
+        Слева: настройки и источник треков → справа: предпросмотр → ниже: генерируется <b>player.html</b> и <b>iframe</b> для Genially.<br>
+        Репозиторий по умолчанию: <code>onegovakota-cmyk/audiopleer</code>, треки в корне (path пустой).
       </div>
     </div>
     <div class="mini">Preview • Playlist • Shuffle • Seek</div>
@@ -83,7 +83,7 @@
   <div class="grid">
     <section class="panel">
       <div class="hd">
-        <b>Настройки</b>
+        <b>Настройки редактора</b>
         <span class="mini" id="tracksCount">Треков: 0</span>
       </div>
 
@@ -118,14 +118,14 @@
 
         <label>Обложка (URL)</label>
         <input id="coverUrl" type="text"
-               value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop"/>
+          value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop"/>
 
         <div class="sep"></div>
 
         <label>Источник треков</label>
         <select id="sourceMode">
-          <option value="github" selected>GitHub папка/корень (public)</option>
-          <option value="raw">Raw ссылки (список)</option>
+          <option value="github" selected>GitHub (public)</option>
+          <option value="raw">Raw ссылки (по строкам)</option>
         </select>
 
         <div id="githubBox">
@@ -142,35 +142,30 @@
 
           <div class="row">
             <div>
-              <label>Папка (path)</label>
+              <label>path (папка)</label>
               <input id="ghPath" type="text" value=""/>
             </div>
             <div>
-              <label>Ветка (ref)</label>
+              <label>ref (ветка)</label>
               <input id="ghRef" type="text" value="main"/>
             </div>
           </div>
 
           <div class="hint">
-            Если треки лежат в корне репозитория — оставь <code>path</code> пустым.<br>
-            Если в папке, например <code>audio</code> или <code>assets/audio</code> — укажи путь.
+            Если треки в корне репозитория — <code>path</code> оставь пустым.<br>
+            Если треки в папке (например <code>audio</code>) — укажи её.
           </div>
         </div>
 
         <div id="rawBox" style="display:none">
           <label>Raw ссылки (по одной на строку)</label>
-          <textarea id="rawUrls"
-placeholder="https://raw.githubusercontent.com/.../track1.mp3
-https://raw.githubusercontent.com/.../track2.mp3"></textarea>
-          <div class="hint">
-            Для теста: <code>https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3</code>
-          </div>
+          <textarea id="rawUrls" placeholder="https://raw.githubusercontent.com/.../track1.mp3&#10;https://raw.githubusercontent.com/.../track2.mp3"></textarea>
         </div>
 
         <div class="btns">
-          <button class="good" id="loadTracksBtn">Загрузить треки</button>
-          <button class="primary" id="applyBtn">Обновить предпросмотр</button>
-          <button class="primary" id="getCodeBtn">Получить код</button>
+          <button class="good" id="loadTracksBtn">1) Загрузить треки</button>
+          <button class="primary" id="applyBtn">2) Обновить предпросмотр</button>
+          <button class="primary" id="getCodeBtn">3) Получить код</button>
           <button class="bad" id="copyPlayerBtn">Скопировать player.html</button>
           <button class="bad" id="copyIframeBtn">Скопировать iframe</button>
         </div>
@@ -179,24 +174,20 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
 
         <div class="sep"></div>
 
-        <b style="font-size:13px">player.html (вставь в репозиторий и включи GitHub Pages)</b>
+        <b style="font-size:13px">Сгенерированный файл: player.html</b>
         <pre class="code" id="playerOut"></pre>
 
         <div class="sep"></div>
 
-        <b style="font-size:13px">iframe для Genially</b>
+        <b style="font-size:13px">Код для вставки в Genially (iframe)</b>
         <pre class="code" id="iframeOut"></pre>
-
-        <div class="hint">
-          Шаги: 1) добавь <code>player.html</code> в репозиторий → 2) включи GitHub Pages → 3) вставь iframe в Genially.
-        </div>
       </div>
     </section>
 
     <section class="panel">
       <div class="hd">
         <b>Предпросмотр</b>
-        <span class="mini">рендерится как страница плеера</span>
+        <span class="mini">это именно player.html</span>
       </div>
       <div class="previewBox">
         <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
@@ -206,9 +197,6 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
 </div>
 
 <script>
-  // -----------------------
-  // UI helpers
-  // -----------------------
   const els = {
     lang: document.getElementById("lang"),
     primary: document.getElementById("primary"),
@@ -243,14 +231,9 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
     els.status.textContent = msg || "";
     els.status.className = "status " + (type || "");
   }
-  function updateCount(){
-    els.tracksCount.textContent = "Треков: " + tracks.length;
-  }
+  function updateCount(){ els.tracksCount.textContent = "Треков: " + tracks.length; }
   function isAudioFile(name){ return audioExt.test(name || ""); }
 
-  // -----------------------
-  // GitHub loader (public) - recursive
-  // -----------------------
   function contentsApiUrl(owner, repo, path, ref){
     const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
     const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
@@ -262,14 +245,7 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
     const txt = await res.text().catch(()=> "");
     let data = null;
     try{ data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
-    return {
-      ok: res.ok,
-      status: res.status,
-      statusText: res.statusText,
-      data,
-      url,
-      rateRemaining: res.headers.get("x-ratelimit-remaining"),
-    };
+    return { ok: res.ok, status: res.status, statusText: res.statusText, data, url };
   }
 
   async function loadFromGitHub(owner, repo, path, ref){
@@ -289,22 +265,15 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
     }
 
     let lastErr = null;
-
     for(const r of refsToTry){
       const url = contentsApiUrl(owner, repo, cleanPath, r);
       const res = await fetchJson(url);
 
-      if(!res.ok){
-        lastErr = res;
-        continue;
-      }
+      if(!res.ok){ lastErr = res; continue; }
       if(res.data && !Array.isArray(res.data) && res.data.type === "file"){
-        throw new Error("path указывает на файл, укажи путь к папке.");
+        throw new Error("path указывает на файл — укажи путь к папке или оставь пустым для корня.");
       }
-      if(!Array.isArray(res.data)){
-        lastErr = res;
-        continue;
-      }
+      if(!Array.isArray(res.data)){ lastErr = res; continue; }
 
       const out = [];
       await walk(res.data, out);
@@ -312,8 +281,7 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
     }
 
     const msg = (lastErr && typeof lastErr.data === "object" && lastErr.data?.message) ? lastErr.data.message : "";
-    const rl = lastErr?.rateRemaining != null ? ` (rate remaining: ${lastErr.rateRemaining})` : "";
-    throw new Error(`GitHub API error: ${lastErr?.status || ""} ${lastErr?.statusText || ""}${rl}${msg ? " — " + msg : ""}`);
+    throw new Error(`GitHub API error: ${lastErr?.status || ""} ${lastErr?.statusText || ""}${msg ? " — " + msg : ""}`);
   }
 
   function loadFromRawList(text){
@@ -322,9 +290,26 @@ https://raw.githubusercontent.com/.../track2.mp3"></textarea>
     return urls.map(u=>({ url:u, title:"" }));
   }
 
-  // -----------------------
-  // Build player.html (page for GitHub Pages)
-  // -----------------------
+  function buildConfig(){
+    return {
+      lang: els.lang.value,
+      coverUrl: els.coverUrl.value.trim(),
+      colors: {
+        primary: els.primary.value,
+        accent: els.accent.value,
+        text: els.textColor.value,
+        muted: els.mutedColor.value,
+      },
+      github: {
+        owner: els.ghOwner.value.trim(),
+        repo:  els.ghRepo.value.trim(),
+        path:  els.ghPath.value.trim(),
+        ref:   els.ghRef.value.trim() || "main",
+      },
+      tracks: tracks
+    };
+  }
+
   function buildPlayerHtml(cfg){
     const safeCfg = JSON.stringify(cfg).replace(/</g, "\\u003c");
 
@@ -473,15 +458,15 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
       </div>
       <div class="meta">
         <p class="title" id="gaudio-title">—</p>
-        <div class="artist" id="gaudio-artist">Loading…</div>
+        <div class="artist" id="gaudio-artist">${cfg.lang==="en" ? "Ready" : "Готово"}</div>
       </div>
     </div>
 
     <div class="controls">
-      <button class="btn" id="gaudio-prev">⏮</button>
-      <button class="btn primary" id="gaudio-play"><span class="ic" id="gaudio-play-ic">▶</span></button>
-      <button class="btn" id="gaudio-next">⏭</button>
-      <button class="btn tog" id="gaudio-shuffle">🔀 <b id="gaudio-shuf-state">OFF</b></button>
+      <button class="btn" id="gaudio-prev" title="prev">⏮</button>
+      <button class="btn primary" id="gaudio-play" title="play"><span class="ic" id="gaudio-play-ic">▶</span></button>
+      <button class="btn" id="gaudio-next" title="next">⏭</button>
+      <button class="btn tog" id="gaudio-shuffle" title="shuffle">🔀 <b id="gaudio-shuf-state">OFF</b></button>
     </div>
 
     <div class="progress">
@@ -493,7 +478,7 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
     </div>
 
     <div class="bottom">
-      <button class="listBtn" id="gaudio-listBtn">☰ ${(cfg.lang==="en" ? "Playlist" : "Плейлист")}</button>
+      <button class="listBtn" id="gaudio-listBtn">☰ ${cfg.lang==="en" ? "Playlist" : "Плейлист"}</button>
       <span class="badge" id="gaudio-count">0</span>
     </div>
 
@@ -549,13 +534,11 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   }
   function isAbs(u){ return /^https?:\\/\\//i.test(u||""); }
 
-  // Tracks: либо заранее переданы raw, либо грузим с GitHub
   let tracks = Array.isArray(CFG.tracks) ? CFG.tracks : [];
   let index = 0;
   let isShuffle = false;
   let shuffleBag = [];
 
-  // Audio
   const audio = new Audio();
   audio.preload = "metadata";
 
@@ -715,51 +698,21 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   audio.addEventListener("play", syncPlayUI);
   audio.addEventListener("pause", syncPlayUI);
 
-  // INIT
   renderMeta();
   renderList();
   setRangeVisual(0);
   if(tracks.length) load(0);
 })();
-</script>
+<\/script>
 </body>
 </html>`;
   }
 
-  function buildConfig(){
-    return {
-      lang: els.lang.value,
-      coverUrl: els.coverUrl.value.trim(),
-      colors: {
-        primary: els.primary.value,
-        accent: els.accent.value,
-        text: els.textColor.value,
-        muted: els.mutedColor.value,
-      },
-      // В player.html мы передаём уже готовый список абсолютных URL (raw/download_url)
-      tracks: tracks,
-      // Эти поля мы тоже сохраняем в cfg (на будущее), но плееру достаточно tracks[]
-      github: {
-        owner: els.ghOwner.value.trim(),
-        repo:  els.ghRepo.value.trim(),
-        path:  els.ghPath.value.trim(),
-        ref:   els.ghRef.value.trim() || "main",
-      }
-    };
-  }
-
-  // -----------------------
-  // Preview: render player.html inside iframe (srcdoc)
-  // -----------------------
   function mountPreview(){
     const cfg = buildConfig();
-    const playerHtml = buildPlayerHtml(cfg);
-    els.previewFrame.srcdoc = playerHtml;
+    els.previewFrame.srcdoc = buildPlayerHtml(cfg);
   }
 
-  // -----------------------
-  // Code output: player.html + iframe
-  // -----------------------
   function updateOutputs(){
     const cfg = buildConfig();
     const playerHtml = buildPlayerHtml(cfg);
@@ -767,7 +720,6 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
 
     const owner = cfg.github.owner || "onegovakota-cmyk";
     const repo  = cfg.github.repo  || "audiopleer";
-    // Если ты положишь player.html в корень и включишь GitHub Pages:
     const pageUrl = `https://${owner}.github.io/${repo}/player.html`;
 
     els.iframeOut.textContent =
@@ -778,9 +730,6 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
 ></iframe>`;
   }
 
-  // -----------------------
-  // Events
-  // -----------------------
   els.sourceMode.addEventListener("change", ()=>{
     const m = els.sourceMode.value;
     els.githubBox.style.display = (m==="github") ? "" : "none";
@@ -794,9 +743,8 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
       if(els.sourceMode.value === "github"){
         const owner = els.ghOwner.value.trim();
         const repo  = els.ghRepo.value.trim();
-        const path  = els.ghPath.value.trim();     // может быть пустым = корень
+        const path  = els.ghPath.value.trim();
         const ref   = els.ghRef.value.trim() || "main";
-        if(!owner || !repo) throw new Error("Заполни owner и repo.");
 
         const res = await loadFromGitHub(owner, repo, path, ref);
         tracks = res.tracks;
@@ -817,50 +765,34 @@ body{margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto
   });
 
   els.applyBtn.addEventListener("click", ()=>{
-    try{
-      mountPreview();
-      setStatus("Предпросмотр обновлён.", "ok");
-    }catch(e){
-      setStatus(e.message || String(e), "err");
-    }
+    mountPreview();
+    setStatus("Предпросмотр обновлён.", "ok");
   });
 
   els.getCodeBtn.addEventListener("click", ()=>{
-    try{
-      updateOutputs();
-      setStatus("Код сгенерирован.", "ok");
-    }catch(e){
-      setStatus(e.message || String(e), "err");
-    }
+    updateOutputs();
+    setStatus("Код сгенерирован.", "ok");
   });
 
   async function copyText(txt){
-    if(!txt.trim()) throw new Error("Нечего копировать. Сначала «Получить код».");
+    if(!txt.trim()) throw new Error("Нечего копировать. Нажми «Получить код».");
     await navigator.clipboard.writeText(txt);
   }
 
   els.copyPlayerBtn.addEventListener("click", async ()=>{
-    try{
-      await copyText(els.playerOut.textContent || "");
-      setStatus("Скопировано: player.html", "ok");
-    }catch(e){
-      setStatus(e.message || String(e), "err");
-    }
+    try{ await copyText(els.playerOut.textContent || ""); setStatus("Скопировано: player.html", "ok"); }
+    catch(e){ setStatus(e.message || String(e), "err"); }
   });
 
   els.copyIframeBtn.addEventListener("click", async ()=>{
-    try{
-      await copyText(els.iframeOut.textContent || "");
-      setStatus("Скопировано: iframe", "ok");
-    }catch(e){
-      setStatus(e.message || String(e), "err");
-    }
+    try{ await copyText(els.iframeOut.textContent || ""); setStatus("Скопировано: iframe", "ok"); }
+    catch(e){ setStatus(e.message || String(e), "err"); }
   });
 
   // init
   updateCount();
-  mountPreview();
   updateOutputs();
+  mountPreview();
 </script>
 </body>
 </html>
