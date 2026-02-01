@@ -19,7 +19,7 @@
       background:rgba(16,24,42,.55);backdrop-filter: blur(10px);
     }
     header h1{margin:0;font-size:16px;font-weight:700}
-    header .sub{color:var(--ui-muted);font-size:12px}
+    header .sub{color:var(--ui-muted);font-size:12px;line-height:1.35}
     .grid{display:grid;grid-template-columns:420px 1fr;gap:16px;margin-top:16px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
     .panel{
@@ -64,6 +64,7 @@
     }
     .mini{font-size:12px;color:var(--ui-muted)}
     .sep{height:1px;background:var(--ui-border);margin:12px 0}
+    code{background:rgba(0,0,0,.22);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12)}
   </style>
 </head>
 <body>
@@ -71,9 +72,12 @@
   <header>
     <div>
       <h1>Genially Audio Player Builder</h1>
-      <div class="sub">Редактор → предпросмотр → embed-код (прозрачный фон). С диагностикой ошибок.</div>
+      <div class="sub">
+        Редактор → предпросмотр → embed-код (прозрачный фон).<br>
+        GitHub repo по умолчанию: <code>onegovakota-cmyk/audiopleer</code> (public).
+      </div>
     </div>
-    <div class="mini">Shuffle • Playlist • Seek</div>
+    <div class="mini">Shuffle • Playlist • Seek • Diagnostics</div>
   </header>
 
   <div class="grid">
@@ -114,7 +118,7 @@
 
         <label>Картинка внутри (URL)</label>
         <input id="coverUrl" type="text" placeholder="https://.../cover.jpg"
-          value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop" />
+               value="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80&auto=format&fit=crop" />
 
         <div class="sep"></div>
 
@@ -132,7 +136,7 @@
             </div>
             <div>
               <label>repo</label>
-              <input id="ghRepo" type="text" value="audioplayer" />
+              <input id="ghRepo" type="text" value="audiopleer" />
             </div>
           </div>
           <div class="row">
@@ -145,9 +149,11 @@
               <input id="ghRef" type="text" value="main" />
             </div>
           </div>
+
           <div class="hint">
-            Форматы: mp3, wav, ogg, m4a, aac. Репозиторий должен быть public.<br>
-            <b>Важно:</b> path может быть вида <code>assets/audio</code> — это поддерживается.
+            Поддерживаемые форматы: mp3, wav, ogg, m4a, aac.<br>
+            <b>Важно:</b> path может быть вида <code>assets/audio</code> — это поддерживается.<br>
+            Этот загрузчик ищет файлы и в подпапках (рекурсивно).
           </div>
         </div>
 
@@ -172,7 +178,7 @@
         <div class="sep"></div>
         <b style="font-size:13px">Сгенерированный embed-код</b>
         <div class="hint" style="margin-top:6px">
-          Если в Genially не исполняется JS в HTML-вставке — придётся вставлять через iframe (страницу на хостинге).
+          Если в Genially не исполняется JS в HTML-вставке — вставляй через iframe (страницу на GitHub Pages/хостинге).
         </div>
         <pre class="code" id="codeOut"></pre>
       </div>
@@ -440,7 +446,6 @@ function buildEmbedHTML(config){
   }
   audio.addEventListener("error", ()=> explainAudioError(audio.error));
   audio.addEventListener("stalled", ()=> alert("Audio stalled (загрузка застопорилась)\\nURL: " + (audio.src||"")));
-  audio.addEventListener("abort", ()=> console.log("audio abort"));
 
   const tracks = Array.isArray(CONFIG.tracks) ? CONFIG.tracks : [];
   const coverUrl = CONFIG.coverUrl || "";
@@ -511,7 +516,7 @@ function buildEmbedHTML(config){
       return \`
         <div class="track \${i===index ? "active":""}" data-i="\${i}">
           <div class="name" title="\${name.replaceAll('"','&quot;')}">\${name}</div>
-          <div class="dur"> </div>
+          <div class="dur"></div>
         </div>\`;
     }).join("");
 
@@ -691,12 +696,10 @@ function isAudioFile(name){
   return /\.(mp3|wav|ogg|m4a|aac)$/i.test(name || "");
 }
 
-// FIX: корректно кодируем path по сегментам (чтобы "assets/audio" работало)
+// корректное кодирование path по сегментам (assets/audio) + рекурсивный обход подпапок
 async function loadFromGitHub(owner, repo, path, ref){
   const cleanPath = (path || "").trim().replace(/^\/+|\/+$/g,"");
-  const encodedPath = cleanPath
-    ? cleanPath.split("/").map(encodeURIComponent).join("/")
-    : "";
+  const encodedPath = cleanPath ? cleanPath.split("/").map(encodeURIComponent).join("/") : "";
   const api = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodedPath}?ref=${encodeURIComponent(ref || "main")}`;
 
   const res = await fetch(api, { headers: { "Accept": "application/vnd.github+json" } });
@@ -705,13 +708,33 @@ async function loadFromGitHub(owner, repo, path, ref){
     throw new Error(`GitHub API error: ${res.status} ${res.statusText}${t ? " — " + t : ""}`);
   }
   const data = await res.json();
-  if(!Array.isArray(data)) throw new Error("Ожидался список файлов (проверь, что path указывает на папку).");
 
-  const aud = data
-    .filter(x => x && x.type === "file" && isAudioFile(x.name))
-    .map(x => ({ url: x.download_url, title: x.name.replace(/\.(mp3|wav|ogg|m4a|aac)$/i,"") }));
+  if (data && !Array.isArray(data) && data.type === "file") {
+    throw new Error("path указывает на файл. Укажи путь к папке.");
+  }
+  if(!Array.isArray(data)) throw new Error("Ожидался список файлов (проверь owner/repo/path/ref).");
 
-  if(aud.length === 0) throw new Error("В папке не найдено аудиофайлов (mp3/wav/ogg/m4a/aac).");
+  async function walk(items){
+    const out = [];
+    for(const x of items){
+      if(!x) continue;
+      if(x.type === "file" && isAudioFile(x.name)){
+        out.push({ url: x.download_url, title: x.name.replace(/\.(mp3|wav|ogg|m4a|aac)$/i,"") });
+      }else if(x.type === "dir" && x.url){
+        const subRes = await fetch(x.url, { headers: { "Accept": "application/vnd.github+json" } });
+        if(!subRes.ok) continue;
+        const sub = await subRes.json();
+        if(Array.isArray(sub)){
+          const subOut = await walk(sub);
+          out.push(...subOut);
+        }
+      }
+    }
+    return out;
+  }
+
+  const aud = await walk(data);
+  if(aud.length === 0) throw new Error("Не найдено аудиофайлов (mp3/wav/ogg/m4a/aac) в этой папке и подпапках.");
   return aud;
 }
 
